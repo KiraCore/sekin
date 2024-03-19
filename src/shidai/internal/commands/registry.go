@@ -10,3 +10,7 @@ func GetCommandHandler(name string) (CommandHandler, bool) {
 	handler, exists := commandRegistry[name]
 	return handler, exists
 }
+
+func init() {
+	RegisterCommand("join", &JoinCommandHandler{})
+}

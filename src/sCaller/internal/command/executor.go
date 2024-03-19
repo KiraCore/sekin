@@ -36,41 +36,20 @@ func SekaiInitCmd(args interface{}) (string, error) {
 	return string(output), err
 }
 
-func SekaiVersionCmd(interface{}) (string, error) {
+func SekaiVersionCmd(args interface{}) (string, error) {
+	cmdArgs, ok := args.(*SekaiVersion)
+	if !ok {
+		return "", fmt.Errorf("invalid arguments for 'version'")
+	}
 	cmd := exec.Command(ExecPath, "version")
+
+	if cmdArgs.Home != "" {
+		cmd.Args = append(cmd.Args, fmt.Sprintf("--home=%v", cmdArgs.Home))
+	}
+
 	log.Printf("DEBUG: SekaiVersionCmd: cmd: %v", cmd)
 	output, err := cmd.CombinedOutput()
 
-	return string(output), err
-}
-
-func SekaidKeysAddCmd(args interface{}) (string, error) {
-	log.Printf("DEBUG: SekaidKeysAddCmd: in args: %v", args)
-	cmdArgs, ok := args.(*SekaidKeysAdd)
-	if !ok {
-		return "", fmt.Errorf("invalid arguments for 'keys-add'")
-	}
-
-	cmd := exec.Command(ExecPath, "keys", "add", cmdArgs.Address,
-		"--keyring-backend", cmdArgs.Keyring,
-		"--home", cmdArgs.Home,
-		"--log_format", cmdArgs.LogFmt,
-		"--log_level", cmdArgs.LogLvl,
-	)
-
-	if cmdArgs.Output != "" {
-		cmd.Args = append(cmd.Args, "--output", cmdArgs.Output)
-	}
-	if cmdArgs.Recover {
-		cmd.Args = append(cmd.Args, "--recover")
-	}
-	if cmdArgs.Trace {
-		cmd.Args = append(cmd.Args, "--trace")
-	}
-
-	log.Printf("DEBUG: SekaidKeysAddCmd: cmd args: %v", cmd.Args)
-	output, err := cmd.CombinedOutput()
-	log.Println(string(output))
 	return string(output), err
 }
 
