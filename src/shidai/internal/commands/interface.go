@@ -1,6 +1,6 @@
 package commands
 
 type Command interface {
-	CommandName() string
+	Name() string
 	Execute() error
 }
