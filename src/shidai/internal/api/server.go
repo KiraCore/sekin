@@ -3,6 +3,7 @@ package api
 import (
 	"log/slog"
 	"net/http"
+	"os"
 
 	"shidai/internal/executors"
 	"shidai/internal/handler"
@@ -10,7 +11,8 @@ import (
 )
 
 func Serve() {
-	// TODO config slog to print logs to the STDOUT and FILE
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: false}))
+	slog.SetDefault(logger)
 
 	slog.Info("Registration of the Init Executor using registry", "command", "init")
 	registry.RegisterExecutor("init", executors.NewInitExecutor(map[string]interface{}{}))

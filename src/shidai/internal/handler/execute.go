@@ -22,7 +22,7 @@ func ExecuteCommandHandler(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("Handle", "command", req.Command, "arguments", req.Args)
 
-	handler, exists := registry.GetCommandExecutor(req.Command)
+	executor, exists := registry.GetCommandExecutor(req.Command)
 	if !exists {
 		slog.Error("Not supported", "command", req.Command)
 
@@ -30,7 +30,7 @@ func ExecuteCommandHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := handler.Execute(); err != nil {
+	if err := executor.Execute( /*config*/ ); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
