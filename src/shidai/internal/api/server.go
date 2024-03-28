@@ -11,7 +11,7 @@ import (
 )
 
 func Serve() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: false}))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug, AddSource: true}))
 	slog.SetDefault(logger)
 
 	slog.Info("Registration of the Init Executor using registry", "command", "init")

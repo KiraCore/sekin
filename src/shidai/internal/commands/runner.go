@@ -1,5 +1,7 @@
 package commands
 
+import "context"
+
 type CommandRunner struct {
 	commandName string
 	Args        map[string]interface{}
@@ -12,8 +14,10 @@ func NewCommandRunner(cmd string, args map[string]interface{}) *CommandRunner {
 	}
 }
 
-func (c *CommandRunner) Execute() error {
-	return postCommand(c.commandName, c.Args)
+func (c *CommandRunner) Execute(ctx context.Context) error {
+	_, err := postCommand(ctx, c.commandName, c.Args)
+
+	return err
 }
 
 func (c *CommandRunner) Name() string {

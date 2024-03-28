@@ -1,6 +1,8 @@
 package commands
 
+import "context"
+
 type Command interface {
 	Name() string
-	Execute() error
+	Execute(context.Context) error
 }

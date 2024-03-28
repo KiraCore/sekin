@@ -1,7 +1,9 @@
 package registry
 
+import "context"
+
 type CommandExecutor interface {
-	Execute() error
+	Execute(context.Context) error
 }
 
 var executorRegistry = make(map[string]CommandExecutor)
