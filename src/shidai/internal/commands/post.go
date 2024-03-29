@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func postCommand(command string, args map[string]interface{}) error {
+func postCommand(ctx context.Context, command string, args map[string]interface{}) ([]byte, error) {
 	slog.Info("POSTing the next command", "command", command, "args", args)
 	body, err := json.Marshal(map[string]interface{}{
 		"command": command,
@@ -19,16 +19,16 @@ func postCommand(command string, args map[string]interface{}) error {
 	})
 	if err != nil {
 		slog.Error("marshaling the next command", "error", err)
-		return err
+		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
 	// TODO change URL based on config
 	req, err := http.NewRequestWithContext(ctx, "POST", "http://sekaid_rpc:8080/api/execute", bytes.NewBuffer(body))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -38,11 +38,11 @@ func postCommand(command string, args map[string]interface{}) error {
 		if errors.Is(err, io.EOF) && command == "start" {
 			// Log that the start command was sent, and EOF is expected
 			slog.Info("Start command issued, server process is expected to restart", "command", command)
-			return nil // Treat this specific case as success
+			return nil, nil // Treat this specific case as success
 		} else {
 			// For all other errors, log and return the error as usual
 			slog.Error("Error making request", "command", command, "error", err)
-			return err
+			return nil, err
 		}
 	}
 	defer response.Body.Close()
@@ -52,11 +52,11 @@ func postCommand(command string, args map[string]interface{}) error {
 
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	bodyString := string(bodyBytes)
 	slog.Info("Response:", "body", bodyString)
 
-	return nil
+	return bodyBytes, nil
 }

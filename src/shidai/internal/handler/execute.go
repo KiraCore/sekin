@@ -1,16 +1,20 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"time"
 
+	"shidai/internal/config"
 	"shidai/internal/registry"
 )
 
 type CommandRequest struct {
 	Command string                 `json:"command"`
 	Args    map[string]interface{} `json:"args"`
+	Config  config.Config          `json:"config"`
 }
 
 func ExecuteCommandHandler(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +34,13 @@ func ExecuteCommandHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := executor.Execute( /*config*/ ); err != nil {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	ctx = context.WithValue(ctx, config.ConfigContextKey, req.Config)
+	slog.Debug("Context", "ctx", ctx, "config", req.Config)
+
+	if err := executor.Execute(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

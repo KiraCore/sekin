@@ -1,6 +1,7 @@
 package executors
 
 import (
+	"context"
 	"log/slog"
 
 	"shidai/internal/commands"
@@ -30,10 +31,10 @@ func NewInitExecutor(args map[string]interface{}) *InitExecutor {
 			//     --log_format="" \
 			//     --log_level="" \
 			//     --overwrite
-			commands.NewCommandRunner("keys-add", map[string]interface{}{
+			commands.NewKeyAddRunner(map[string]interface{}{
 				"address":         "genesis",
 				"keyring-backend": "test",
-				"home":            "/sekai",
+				// "home":            "/sekai",
 			}),
 			commands.NewCommandRunner("add-genesis-account", map[string]interface{}{
 				"address":         "genesis",
@@ -57,7 +58,7 @@ func NewInitExecutor(args map[string]interface{}) *InitExecutor {
 	}
 }
 
-func (e *InitExecutor) Execute( /* config Config */ ) error {
+func (e *InitExecutor) Execute(ctx context.Context) error {
 	// Implementation of `shidai init ...`
 	// Actually there is not CLI commands.
 	// It's just a handler for initialization
@@ -68,7 +69,7 @@ func (e *InitExecutor) Execute( /* config Config */ ) error {
 	for index, command := range e.commands {
 		slog.Info("Running command", "index", index, "command", command.Name())
 
-		err := command.Execute( /* config Config */ )
+		err := command.Execute(ctx)
 		if err != nil {
 			slog.Error("Got an error while executing", "error", err)
 			return err
