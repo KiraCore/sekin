@@ -6,7 +6,7 @@ import (
 	"os"
 	"shidai/utils/osUtils"
 
-	vlg "github.com/PeepoFrog/validator-key-gen/MnemonicsGenerator"
+	vlg "github.com/KiraCore/tools/validator-key-gen/MnemonicsGenerator"
 	cosmosBIP39 "github.com/cosmos/go-bip39"
 
 	kiraMnemonicGen "github.com/kiracore/tools/bip39gen/cmd"

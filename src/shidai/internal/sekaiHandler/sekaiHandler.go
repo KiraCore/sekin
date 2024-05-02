@@ -14,7 +14,7 @@ import (
 	"shidai/utils/mnemonicController"
 	utilsTypes "shidai/utils/types"
 
-	mnemonicsgenerator "github.com/PeepoFrog/validator-key-gen/MnemonicsGenerator"
+	mnemonicsgenerator "github.com/KiraCore/tools/validator-key-gen/MnemonicsGenerator"
 )
 
 func StartSekai(cfg *utilsTypes.ShidaiConfig) error {

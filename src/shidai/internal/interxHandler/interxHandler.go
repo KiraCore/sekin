@@ -10,7 +10,7 @@ import (
 	joinermanager "shidai/utils/joinerHandler"
 	utilsTypes "shidai/utils/types"
 
-	mnemonicsgenerator "github.com/PeepoFrog/validator-key-gen/MnemonicsGenerator"
+	mnemonicsgenerator "github.com/KiraCore/tools/validator-key-gen/MnemonicsGenerator"
 )
 
 func InitInterx(ctx context.Context, cfg *utilsTypes.ShidaiConfig, masterMnemonicSet *mnemonicsgenerator.MasterMnemonicSet) error {

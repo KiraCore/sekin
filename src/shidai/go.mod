@@ -3,7 +3,7 @@ module shidai
 go 1.22.0
 
 require (
-	github.com/PeepoFrog/validator-key-gen v0.0.0-20240403162836-fd35a3f0b7f5
+	github.com/KiraCore/tools/validator-key-gen v0.0.0-20240502110212-fd9aae04a1a7
 	github.com/cosmos/cosmos-sdk v0.50.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -58,7 +58,7 @@ require (
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/glog v1.2.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -121,3 +121,5 @@ require (
 	pgregory.net/rapid v1.1.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
