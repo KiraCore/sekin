@@ -189,7 +189,7 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to init interx: %w", err)
 	}
-	err = interxhandler.StartInterx()
+	err = interxhandler.StartInterx(ctx)
 	if err != nil {
 		return "", fmt.Errorf("unable to start interx: %w", err)
 	}
@@ -225,7 +225,7 @@ func handleStartComamnd(args map[string]interface{}) (string, error) {
 		return "", err
 	}
 
-	err = interxhandler.StartInterx()
+	err = interxhandler.StartInterx(ctx)
 	if err != nil {
 		return "", fmt.Errorf("unable to start interx: %w", err)
 	}
