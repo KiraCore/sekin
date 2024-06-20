@@ -105,7 +105,7 @@ func addrbookCopy() error {
 	var err error
 	interxAddrbookExist = utils.FileExists(types.INTERX_ADDRBOOK_PATH)
 	if interxAddrbookExist {
-		equal, err = utils.FilesAreEqual(types.SEKAI_ADDRBOOK_PATH, types.INTERX_ADDRBOOK_PATH)
+		equal, err = utils.FilesAreEqualMD5(types.SEKAI_ADDRBOOK_PATH, types.INTERX_ADDRBOOK_PATH)
 		if err != nil {
 			return fmt.Errorf("error when comparing sekai and interx address books: %w", err)
 		}

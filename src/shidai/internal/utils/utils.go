@@ -2,7 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"crypto/md5"
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -382,4 +384,33 @@ func FilesAreEqual(file1, file2 string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func FilesAreEqualMD5(file1, file2 string) (bool, error) {
+	hash1, err := HashFileMD5(file1)
+	if err != nil {
+		return false, fmt.Errorf("failed to hash file1: %w", err)
+	}
+
+	hash2, err := HashFileMD5(file2)
+	if err != nil {
+		return false, fmt.Errorf("failed to hash file2: %w", err)
+	}
+
+	return hash1 == hash2, nil
+}
+
+func HashFileMD5(filename string) (string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer f.Close()
+
+	hasher := md5.New()
+	if _, err := io.Copy(hasher, f); err != nil {
+		return "", fmt.Errorf("failed to hash file: %w", err)
+	}
+
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
