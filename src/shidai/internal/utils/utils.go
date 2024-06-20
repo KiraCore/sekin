@@ -298,11 +298,12 @@ func SafeCopy(src, dst string) error {
 	}
 
 	info, err := os.Stat(dst)
-	if !os.IsNotExist(err) {
-		isFolder := info.IsDir()
-		if !isFolder {
-			return fmt.Errorf("destination file <%v> is folder", dst)
+	if err == nil {
+		if info.IsDir() {
+			return fmt.Errorf("destination path <%v> is a folder, cannot overwrite", dst)
 		}
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to access destination path <%v>: %w", dst, err)
 	}
 
 	srcFile, err := os.Open(src)
