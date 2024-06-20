@@ -35,6 +35,7 @@ func InitInterx(ctx context.Context, masterMnemonicSet *mnemonicsgenerator.Maste
 			"signing_mnemonic":  signerMnemonic,
 			"port":              fmt.Sprintf("%v", types.DEFAULT_INTERX_PORT),
 			"validator_node_id": string(masterMnemonicSet.ValidatorNodeId),
+			"addrbook":          types.INTERX_ADDRBOOK_PATH,
 		},
 	}
 	out, err := httpexecutor.ExecuteCallerCommand(types.INTERX_CONTAINER_ADDRESS, "8081", "POST", cmd)
@@ -70,7 +71,15 @@ func addrbookManager(ctx context.Context) {
 	ticker := time.NewTicker(30 * time.Minute)
 	defer ticker.Stop()
 	errorCooldown := time.Second * 1
-
+	for {
+		err := addrbookCopy()
+		if err != nil {
+			log.Debug("Error when replacing interx addrbook with sekai addrbook, sleeping", zap.Duration("errorCooldown", errorCooldown))
+			time.Sleep(errorCooldown)
+		} else {
+			break
+		}
+	}
 	for {
 		select {
 		case <-ctx.Done():
