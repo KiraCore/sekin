@@ -6,6 +6,12 @@ import (
 )
 
 type (
+	SekinPackagesVersion struct {
+		Sekai  string
+		Interx string
+		Shidai string
+	}
+
 	InfraFiles map[string]string
 
 	AppInfo struct {
