@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,6 +15,18 @@ import (
 )
 
 // var log = logger.GetLogger() // Initialize the logger instance at the package level
+
+const (
+	Lower  = "LOWER"
+	Higher = "HIGHER"
+	Same   = "SAME"
+)
+
+type ComparisonResult struct {
+	Sekai  string
+	Interx string
+	Shidai string
+}
 
 type Github interface {
 	GetLatestSekinVersion() (*types.SekinPackagesVersion, error)
@@ -48,10 +61,14 @@ func UpdateOrUpgrade(gh Github) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Current", current)
-	fmt.Println("Latest", latest)
 
-	//compare latest and current
+	results, err := Compare(current, latest)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Current: %+v\nLatest: %+v\n", current, latest)
+	fmt.Printf("%+v\n", results)
 	// if shidai have newer version //Create update plan and execute updater bin
 
 	// log.Debug("SEKIN LATEST PACKAGES", zap.Any("sekin", sekin))
@@ -88,4 +105,85 @@ func getCurrentVersions() (*types.SekinPackagesVersion, error) {
 
 func executeUpdaterBin() {
 
+}
+
+func ParseVersion(version string) (major, minor, patch int, err error) {
+	parts := strings.TrimPrefix(version, "v")
+	components := strings.Split(parts, ".")
+	if len(components) != 3 {
+		return 0, 0, 0, fmt.Errorf("invalid version format: %s", version)
+	}
+
+	major, err = strconv.Atoi(components[0])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	minor, err = strconv.Atoi(components[1])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	patch, err = strconv.Atoi(components[2])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return major, minor, patch, nil
+}
+
+// CompareVersions compares two version strings and returns 1 if v1 > v2, -1 if v1 < v2, and 0 if they are equal.
+func CompareVersions(v1, v2 string) (string, error) {
+	major1, minor1, patch1, err := ParseVersion(v1)
+	if err != nil {
+		return "", err
+	}
+
+	major2, minor2, patch2, err := ParseVersion(v2)
+	if err != nil {
+		return "", err
+	}
+
+	if major1 > major2 {
+		return Higher, nil
+	} else if major1 < major2 {
+		return Lower, nil
+	}
+
+	if minor1 > minor2 {
+		return Higher, nil
+	} else if minor1 < minor2 {
+		return Lower, nil
+	}
+
+	if patch1 > patch2 {
+		return Higher, nil
+	} else if patch1 < patch2 {
+		return Lower, nil
+	}
+
+	return Same, nil
+}
+
+// Compare compares two SekinPackagesVersion instances and returns the differences, including version comparison.
+func Compare(current, latest *types.SekinPackagesVersion) (ComparisonResult, error) {
+	var result ComparisonResult
+	var err error
+
+	result.Sekai, err = CompareVersions(current.Sekai, latest.Sekai)
+	if err != nil {
+		return result, err
+	}
+
+	result.Interx, err = CompareVersions(current.Interx, latest.Interx)
+	if err != nil {
+		return result, err
+	}
+
+	result.Shidai, err = CompareVersions(current.Shidai, latest.Shidai)
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
 }
