@@ -66,3 +66,13 @@ func UpdateComposeYmlField(compose map[string]interface{}, serviceName, fieldNam
 		}
 	}
 }
+
+// RenameFile renames a file from oldName to newName
+func RenameFile(oldName, newName string) error {
+	// Use os.Rename to rename the file
+	err := os.Rename(oldName, newName)
+	if err != nil {
+		return fmt.Errorf("error renaming file: %v", err)
+	}
+	return nil
+}

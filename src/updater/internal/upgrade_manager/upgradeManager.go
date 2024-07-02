@@ -8,8 +8,7 @@ import (
 
 const update_plan string = "./upgradePlan.json"
 
-// const sekin_home string = "/home/km/sekin"
-const sekin_home string = "/home/peepo/Projects/Go/KIRA/sekin/"
+const sekin_home string = "/home/km/sekin"
 
 func GetUpgrade() error {
 	exist := utils.FileExists(update_plan)

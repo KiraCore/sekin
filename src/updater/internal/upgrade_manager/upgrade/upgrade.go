@@ -8,13 +8,20 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"time"
 
+	"github.com/docker/docker/client"
 	"github.com/kiracore/sekin/src/updater/internal/types"
+	"github.com/kiracore/sekin/src/updater/internal/upgrade_manager/docker"
+	dockercompose "github.com/kiracore/sekin/src/updater/internal/upgrade_manager/docker_compose"
 	"github.com/kiracore/sekin/src/updater/internal/utils"
 	"gopkg.in/yaml.v2"
 )
 
 const SekinComposeFileURL_main_branch string = "https://raw.githubusercontent.com/KiraCore/sekin/main/compose.yml"
+
+const ShidaiServiceName string = "shidai"
+const ShidaiContainerName string = "sekin-" + ShidaiServiceName + "-1"
 
 func ExecuteUpgradePlan(plan *types.UpgradePlan) error {
 	log.Printf("Executing upgrade plan: %+v", plan)
@@ -27,15 +34,15 @@ func UpgradeShidai(sekinHome, version string) error {
 	composeFilePath := filepath.Join(sekinHome, "compose.yml")
 	backupComposeFilePath := filepath.Join(sekinHome, "compose.yml.bak")
 
-	exist := utils.FileExists(backupComposeFilePath)
-	if !exist {
-		err := utils.CopyFile(composeFilePath, backupComposeFilePath)
-		if err != nil {
-			return err
-		}
-	} else {
-		log.Printf("WARNING: backup file already exist, configuring from old backup file")
+	// exist := utils.FileExists(backupComposeFilePath)
+	// if !exist {
+	err := utils.CopyFile(composeFilePath, backupComposeFilePath)
+	if err != nil {
+		return err
 	}
+	// } else {
+	// 	log.Printf("WARNING: backup file already exist, configuring from old backup file")
+	// }
 
 	bakData, err := os.ReadFile(backupComposeFilePath)
 	if err != nil {
@@ -101,16 +108,73 @@ func UpgradeShidai(sekinHome, version string) error {
 	}
 	diff, err := CompareYAMLFiles(backupComposeFilePath, composeFilePath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	log.Println("DIFF", diff)
-	//deleting backup file after seccusesull upgrade
-	// err = utils.DeleteFile(backupComposeFilePath)
-	// if err != nil {
-	// 	fmt.Println("Error deleting backup file:", err)
-	// 	return err
-	// }
-	return nil
+
+	err = dockercompose.DockerComposeUpService(sekinHome, composeFilePath)
+	if err != nil {
+		log.Printf("ERROR when trying to run <%v> compose file: %v ", composeFilePath, err)
+		return err
+	}
+
+	var check bool = false
+
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Printf("Error creating Docker client: %v", err)
+		return err
+	}
+
+	attempts := 3
+	for i := range attempts {
+
+		status, err := docker.CheckContainerState(cli, ShidaiContainerName)
+		if err != nil {
+			fmt.Println("Error checking container status:", err)
+			return err
+		}
+		if status == "running!" {
+			log.Println("Container updated successfully")
+			check = true
+			break
+		} else {
+			//if not "running"
+			log.Printf("WARNING: shidai status is %v, trying again. Attempt %v out of %v", status, i+1, attempts)
+			check = false
+			time.Sleep(time.Second)
+		}
+	}
+
+	if check {
+		// deleting backup file after successful upgrade
+		log.Println("SHIDAI updated successfully")
+		err = utils.DeleteFile(backupComposeFilePath)
+		if err != nil {
+			fmt.Println("Error deleting backup file:", err)
+			return err
+		}
+		return nil
+	} else {
+		log.Printf("WARNING: unable to update shidai trying to run backup compose file.")
+		err = dockercompose.DockerComposeUpService(sekinHome, composeFilePath)
+		if err != nil {
+			log.Printf("ERROR: when trying to run <%v> backup compose file: %v ", backupComposeFilePath, err)
+			return fmt.Errorf("ERROR when trying to run <%v> backup compose file: %w", backupComposeFilePath, err)
+		}
+		log.Println("Deleting new compose file")
+		err := utils.DeleteFile(composeFilePath)
+		if err != nil {
+			log.Printf("ERROR: when trying to delete old compose file: <%v>. Error: %v ", composeFilePath, err)
+			return fmt.Errorf("ERROR when trying to delete old compose file: <%v>. Error: %v ", composeFilePath, err)
+		}
+		err = utils.RenameFile(backupComposeFilePath, composeFilePath)
+		if err != nil {
+			return fmt.Errorf("ERROR: when renaming backup file to old name: %w", err)
+		}
+		log.Println("WARNING: unable to run new version of shidai, update rollback to previous version")
+		return nil
+	}
 }
 
 func ReadComposeYMLField(compose map[string]interface{}, serviceName, fieldName string) (string, error) {
