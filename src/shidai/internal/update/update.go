@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -70,7 +71,12 @@ func UpdateOrUpgrade(gh Github) error {
 	fmt.Printf("Current: %+v\nLatest: %+v\n", current, latest)
 	fmt.Printf("%+v\n", results)
 	// if shidai have newer version //Create update plan and execute updater bin
-
+	if results.Shidai == Lower {
+		err = executeUpdaterBin()
+		if err != nil {
+			return err
+		}
+	}
 	// log.Debug("SEKIN LATEST PACKAGES", zap.Any("sekin", sekin))
 	return nil
 }
@@ -103,8 +109,13 @@ func getCurrentVersions() (*types.SekinPackagesVersion, error) {
 	return &pkgVersions, nil
 }
 
-func executeUpdaterBin() {
-
+func executeUpdaterBin() error {
+	cmd := exec.Command(types.UPDATER_BIN_PATH)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to execute binary: %w, output: %s", err, output)
+	}
+	return nil
 }
 
 func ParseVersion(version string) (major, minor, patch int, err error) {
@@ -132,7 +143,10 @@ func ParseVersion(version string) (major, minor, patch int, err error) {
 	return major, minor, patch, nil
 }
 
+// version has to be in format "v0.4.49"
 // CompareVersions compares two version strings and returns 1 if v1 > v2, -1 if v1 < v2, and 0 if they are equal.
+//
+//	if v1 > v2 = higher, if v1 < v2 = lower else equal
 func CompareVersions(v1, v2 string) (string, error) {
 	major1, minor1, patch1, err := ParseVersion(v1)
 	if err != nil {
@@ -165,6 +179,11 @@ func CompareVersions(v1, v2 string) (string, error) {
 	return Same, nil
 }
 
+// version has to be in format "v0.4.49"
+// CompareVersions compares two version strings and returns 1 if v1 > v2, -1 if v1 < v2, and 0 if they are equal.
+//
+//	if v1 > v2 = higher, if v1 < v2 = lower else equal
+//
 // Compare compares two SekinPackagesVersion instances and returns the differences, including version comparison.
 func Compare(current, latest *types.SekinPackagesVersion) (ComparisonResult, error) {
 	var result ComparisonResult

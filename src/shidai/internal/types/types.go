@@ -279,6 +279,8 @@ const (
 
 	DirPermRO os.FileMode = 0555
 	DirPermWR os.FileMode = 0755
+
+	UPDATER_BIN_PATH = "/updater"
 )
 
 var (
