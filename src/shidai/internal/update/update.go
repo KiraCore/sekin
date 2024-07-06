@@ -11,11 +11,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
 	githubhelper "github.com/kiracore/sekin/src/shidai/internal/update/github_helper"
+	"go.uber.org/zap"
 )
 
-// var log = logger.GetLogger() // Initialize the logger instance at the package level
+var log = logger.GetLogger() // Initialize the logger instance at the package level
 
 const (
 	Lower  = "LOWER"
@@ -33,17 +35,32 @@ type Github interface {
 	GetLatestSekinVersion() (*types.SekinPackagesVersion, error)
 }
 
+// Update check runner (run in goroutine)
 func UpdateRunner(ctx context.Context) {
-	updateInterval := time.Hour * 24
-	ticker := time.NewTicker(updateInterval)
+	normalUpdateInterval := time.Hour * 24
+	errorUpdateInterval := time.Hour * 3
+
+	ticker := time.NewTicker(normalUpdateInterval)
 	defer ticker.Stop()
 	gh := githubhelper.GithubTestHelper{}
+
+	// TODO: should we run update immediately after start or after 24h
+	// err := UpdateOrUpgrade(gh)
+	// if err != nil {
+	// 	log.Warn("Error when executing update:", zap.Error(err))
+	// }
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			UpdateOrUpgrade(gh)
+			err := UpdateOrUpgrade(gh)
+			if err != nil {
+				log.Warn("Error when executing update:", zap.Error(err))
+				ticker.Reset(errorUpdateInterval)
+			} else {
+				ticker.Reset(normalUpdateInterval)
+			}
 		}
 
 	}
@@ -52,7 +69,7 @@ func UpdateRunner(ctx context.Context) {
 
 // checks for updates and executes updates if needed (auto-update only for shidai)
 func UpdateOrUpgrade(gh Github) error {
-	// log.Debug("Checking for update")
+	log.Info("Checking for update")
 	latest, err := gh.GetLatestSekinVersion()
 	if err != nil {
 		return err
@@ -68,16 +85,17 @@ func UpdateOrUpgrade(gh Github) error {
 		return err
 	}
 
-	fmt.Printf("Current: %+v\nLatest: %+v\n", current, latest)
-	fmt.Printf("%+v\n", results)
-	// if shidai have newer version //Create update plan and execute updater bin
+	log.Debug("SEKIN VERSIONS:", zap.Any("latest", latest), zap.Any("current", current))
+	log.Debug("RESULT:", zap.Any("result", results))
+
 	if results.Shidai == Lower {
 		err = executeUpdaterBin()
 		if err != nil {
 			return err
 		}
+	} else {
+		log.Info("shidai update not required:", zap.Any("results", results))
 	}
-	// log.Debug("SEKIN LATEST PACKAGES", zap.Any("sekin", sekin))
 	return nil
 }
 
