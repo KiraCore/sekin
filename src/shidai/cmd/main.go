@@ -6,8 +6,9 @@ import (
 	"go.uber.org/zap"
 )
 
+var Version = "v0.0.1"
+
 func main() {
-	cli.Version = "v1.0.0"
 
 	log := logger.GetLogger()
 	log.Info("initializing cli ...")
