@@ -134,7 +134,7 @@ func UpgradeShidai(sekinHome, version string) error {
 			fmt.Println("Error checking container status:", err)
 			return err
 		}
-		if status == "running!" {
+		if status == "running" {
 			log.Println("Container updated successfully")
 			check = true
 			break

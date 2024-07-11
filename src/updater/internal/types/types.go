@@ -23,3 +23,5 @@ type (
 type UpgradePlan struct {
 	Plan interface{} `json:"plan"`
 }
+
+const SEKIN_LATEST_COMPOSE_URL = "https://raw.githubusercontent.com/KiraCore/sekin/main/compose.yml"

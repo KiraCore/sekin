@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/kiracore/sekin/src/updater/internal/types"
+	githubhelper "github.com/kiracore/sekin/src/updater/internal/upgrade_manager/update/github_helper"
 	"github.com/kiracore/sekin/src/updater/internal/utils"
 )
 
@@ -19,18 +20,6 @@ const (
 	Higher = "HIGHER"
 	Same   = "SAME"
 )
-
-type ComparisonResult struct {
-	Sekai  string
-	Interx string
-	Shidai string
-}
-
-type GithubTestHelper struct{}
-
-func (GithubTestHelper) GetLatestSekinVersion() (*types.SekinPackagesVersion, error) {
-	return &types.SekinPackagesVersion{Sekai: "v0.3.45", Interx: "v0.4.49", Shidai: "v1.9.0"}, nil
-}
 
 func CheckUpgradePlan(path string) (*types.UpgradePlan, error) {
 	exist := utils.FileExists(path)
@@ -51,7 +40,7 @@ func CheckUpgradePlan(path string) (*types.UpgradePlan, error) {
 
 func CheckShidaiUpdate() (latestShidaiVersion *string, err error) {
 	log.Println("Checking for update")
-	gh := GithubTestHelper{}
+	gh := githubhelper.ComposeFileParser{}
 	latest, err := gh.GetLatestSekinVersion()
 	if err != nil {
 		return nil, err
@@ -107,8 +96,8 @@ func getCurrentVersions() (*types.SekinPackagesVersion, error) {
 }
 
 // if v1 > v2 = higher, if v1 < v2 = lower else equal
-func compare(current, latest *types.SekinPackagesVersion) (ComparisonResult, error) {
-	var result ComparisonResult
+func compare(current, latest *types.SekinPackagesVersion) (types.SekinPackagesVersion, error) {
+	var result types.SekinPackagesVersion
 	var err error
 
 	result.Sekai, err = compareVersions(current.Sekai, latest.Sekai)
