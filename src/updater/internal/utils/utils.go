@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
+	"time"
 )
 
 func FileExists(filePath string) bool {
@@ -75,4 +78,29 @@ func RenameFile(oldName, newName string) error {
 		return fmt.Errorf("error renaming file: %v", err)
 	}
 	return nil
+}
+
+func DoHttpQuery(ctx context.Context, client *http.Client, url, method string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, method, url, nil)
+	if err != nil {
+
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	// log.Debug("Response body read successfully", zap.ByteString("response", body))
+
+	return body, nil
 }
