@@ -95,7 +95,7 @@ func DoHttpQuery(ctx context.Context, client *http.Client, url, method string) (
 		log.Error("Failed to read response body", zap.Error(err))
 		return nil, err
 	}
-	log.Debug("Response body read successfully", zap.ByteString("response", body))
+	// log.Debug("Response body read successfully", zap.ByteString("response", body))
 
 	return body, nil
 }
