@@ -42,7 +42,7 @@ func UpdateRunner(ctx context.Context) {
 
 	ticker := time.NewTicker(normalUpdateInterval)
 	defer ticker.Stop()
-	gh := githubhelper.GithubTestHelper{}
+	gh := githubhelper.ComposeFileParser{}
 
 	// TODO: should we run update immediately after start or after 24h
 	// err := UpdateOrUpgrade(gh)

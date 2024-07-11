@@ -281,6 +281,8 @@ const (
 	DirPermWR os.FileMode = 0755
 
 	UPDATER_BIN_PATH = "/updater"
+
+	SEKIN_LATEST_COMPOSE_URL = "https://raw.githubusercontent.com/KiraCore/sekin/main/compose.yml"
 )
 
 var (
