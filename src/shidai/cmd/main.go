@@ -9,11 +9,10 @@ import (
 var Version = "v0.0.1"
 
 func main() {
-
 	log := logger.GetLogger()
 	log.Info("initializing cli ...")
 
-	rootCmd := cli.NewRootCmd()
+	rootCmd := cli.NewRootCmd(Version)
 	if err := rootCmd.Execute(); err != nil {
 		log.Warn("failed to initialize cli ...", zap.Error(err))
 	}

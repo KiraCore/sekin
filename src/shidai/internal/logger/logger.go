@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"log/syslog"
 	"os"
 
@@ -37,7 +36,7 @@ func init() {
 
 	var combinedCore zapcore.Core
 	if !logFileErrorCheck {
-		fmt.Println("LOGGER: is running with file writer")
+		// fmt.Println("LOGGER: is running with file writer")
 		// Create cores for each output
 		fileCore := zapcore.NewCore(jsonEncoder, zapcore.AddSync(logFile), zap.NewAtomicLevelAt(zapcore.InfoLevel))
 		syslogCore := zapcore.NewCore(plaintextEncoder, zapcore.AddSync(syslogWriter), zap.NewAtomicLevelAt(zapcore.DebugLevel))
@@ -45,7 +44,7 @@ func init() {
 		// Combine cores
 		combinedCore = zapcore.NewTee(fileCore, syslogCore)
 	} else {
-		fmt.Println("LOGGER: is running without file writer")
+		// fmt.Println("LOGGER: is running without file writer")
 		stdoutCore := zapcore.NewCore(plaintextEncoder, zapcore.AddSync(os.Stdout), zap.NewAtomicLevelAt(zapcore.DebugLevel))
 		syslogCore := zapcore.NewCore(plaintextEncoder, zapcore.AddSync(syslogWriter), zap.NewAtomicLevelAt(zapcore.DebugLevel))
 		combinedCore = zapcore.NewTee(syslogCore, stdoutCore)

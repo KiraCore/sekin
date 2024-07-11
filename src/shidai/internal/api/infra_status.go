@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +21,8 @@ func infraStatus() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
 		}
-		ctx := c.Request.Context()
+		// ctx := c.Request.Context()
+		ctx := context.Background()
 
 		if SekaiVersion, err = cm.ExecInContainer(ctx, "sekin-sekai-1", []string{"/sekaid", "version"}); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get Sekai version"})

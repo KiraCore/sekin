@@ -51,6 +51,8 @@ services:
       - syslog-ng
     build:
       context: ./
+      args:
+        VERSION: v0.0.1
       dockerfile: shidai.Dockerfile
     restart: always
     ports:
