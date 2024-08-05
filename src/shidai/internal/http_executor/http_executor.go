@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/utils"
@@ -72,8 +71,6 @@ func ExecuteCallerCommand(address, port, method string, commandRequest CommandRe
 
 func DoHttpQuery(ctx context.Context, client *http.Client, url, method string) ([]byte, error) {
 	log.Debug("Starting DoHttpQuery", zap.String("url", url), zap.String("method", method))
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
-	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
