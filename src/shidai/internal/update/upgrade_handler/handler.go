@@ -31,7 +31,11 @@ func CheckNextUpgradePlan(ctx context.Context, ipAddress, interxPort string) (*i
 	if err != nil {
 		return nil, err
 	}
-	return response, nil
+	if !checkIfPlanIsNull(response) {
+		return response, nil
+	} else {
+		return nil, nil
+	}
 }
 func CheckCurrentUpgradePlan(ctx context.Context, ipAddress, interxPort string) (*interx.PlanData, error) {
 	url := fmt.Sprintf("http://%s:%s/%s", ipAddress, interxPort, interx.ENDPOINT_CURRENT_PLAN)
@@ -47,5 +51,17 @@ func CheckCurrentUpgradePlan(ctx context.Context, ipAddress, interxPort string) 
 	if err != nil {
 		return nil, err
 	}
-	return response, nil
+	if !checkIfPlanIsNull(response) {
+		return response, nil
+	} else {
+		return nil, nil
+	}
+}
+
+func checkIfPlanIsNull(plan *interx.PlanData) bool {
+	if plan.Plan.Name == "" {
+		return true
+	} else {
+		return false
+	}
 }
