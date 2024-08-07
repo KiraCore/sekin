@@ -10,6 +10,8 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
@@ -286,4 +288,32 @@ func GetChainID(url string) (string, error) {
 	log.Info("Successfully retrieved chain ID", zap.String("chain_id", data.ChainID))
 	// Return the chain_id
 	return data.ChainID, nil
+}
+
+// Parse string and checks if string is compatible with sekaid/interx/shidai standard
+//
+// version has to be in format "v0.4.49"
+func ParseVersion(version string) (major, minor, patch int, err error) {
+	parts := strings.TrimPrefix(version, "v")
+	components := strings.Split(parts, ".")
+	if len(components) != 3 {
+		return 0, 0, 0, fmt.Errorf("invalid version format: %s", version)
+	}
+
+	major, err = strconv.Atoi(components[0])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	minor, err = strconv.Atoi(components[1])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	patch, err = strconv.Atoi(components[2])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return major, minor, patch, nil
 }
