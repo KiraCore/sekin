@@ -27,13 +27,13 @@ func GetSekaidStatus(ctx context.Context, ipAddress, rpcPort string) (*sekai.Sta
 
 	body, err := httpexecutor.DoHttpQuery(ctx, client, url, "GET")
 	if err != nil {
-		return nil, fmt.Errorf("error when getting sekaid status", err)
+		return nil, fmt.Errorf("error when getting sekaid status: %w", err)
 	}
 
 	var response *sekai.Status
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return nil, fmt.Errorf("error when getting sekaid status", err)
+		return nil, fmt.Errorf("error when getting sekaid status %w", err)
 	}
 
 	return response, nil

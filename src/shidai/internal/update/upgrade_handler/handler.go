@@ -59,7 +59,7 @@ func CheckCurrentUpgradePlan(ctx context.Context, ipAddress, interxPort string) 
 }
 
 func checkIfPlanIsNull(plan *interx.PlanData) bool {
-	if plan.Plan.Name == "" {
+	if plan.Plan.ProposalID == "" {
 		return true
 	} else {
 		return false
