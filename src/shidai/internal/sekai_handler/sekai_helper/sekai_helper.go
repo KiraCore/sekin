@@ -24,17 +24,16 @@ var (
 func GetSekaidStatus(ctx context.Context, ipAddress, rpcPort string) (*sekai.Status, error) {
 	url := fmt.Sprintf("http://%s:%s/%s", ipAddress, rpcPort, endpointStatus)
 	client := &http.Client{}
-	log.Debug("Querying sekai status by url:", zap.String("url", url))
 
 	body, err := httpexecutor.DoHttpQuery(ctx, client, url, "GET")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error when getting sekaid status", err)
 	}
 
 	var response *sekai.Status
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error when getting sekaid status", err)
 	}
 
 	return response, nil
@@ -69,4 +68,34 @@ func CheckSekaiStart(ctx context.Context) error {
 			}
 		}
 	}
+}
+
+// check during n-period of time every 5 seconds if network producing blocks
+func CheckConsensus(ctx context.Context, ipAddress, rpcPort string, timePeriod time.Duration) (bool, error) {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	timer := time.NewTimer(timePeriod)
+	defer timer.Stop()
+	checkStatus, err := GetSekaidStatus(ctx, ipAddress, rpcPort)
+	if err != nil {
+		return false, err
+	}
+	for {
+		select {
+		case <-ticker.C:
+			currentStatus, err := GetSekaidStatus(ctx, ipAddress, rpcPort)
+			if err != nil {
+				return false, err
+			}
+			log.Debug("check block height", zap.String("check height", checkStatus.Result.SyncInfo.LatestBlockHeight), zap.String("current height", currentStatus.Result.SyncInfo.LatestBlockHeight))
+			if currentStatus.Result.SyncInfo.LatestBlockHeight > checkStatus.Result.SyncInfo.LatestBlockHeight {
+				return true, nil
+			}
+
+		case <-timer.C:
+			return false, nil
+		}
+	}
+
 }
