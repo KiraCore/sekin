@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
 	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/kiracore/sekin/src/updater/internal/types"
 	"github.com/kiracore/sekin/src/updater/internal/upgrade_manager/docker"
 	dockercompose "github.com/kiracore/sekin/src/updater/internal/upgrade_manager/docker_compose"
+	upgradeplanhandler "github.com/kiracore/sekin/src/updater/internal/upgrade_manager/upgrade/upgrade_plan_handler"
 	"github.com/kiracore/sekin/src/updater/internal/utils"
 	"gopkg.in/yaml.v2"
 )
@@ -23,12 +23,16 @@ const SekinComposeFileURL_main_branch string = "https://raw.githubusercontent.co
 const ShidaiServiceName string = "shidai"
 const ShidaiContainerName string = "sekin-" + ShidaiServiceName + "-1"
 
-func ExecuteUpgradePlan(plan *types.UpgradePlan) error {
+func ExecuteUpgradePlan(plan *types.PlanData, cli *client.Client) error {
 	log.Printf("Executing upgrade plan: %+v", plan)
+	hardfork := upgradeplanhandler.CheckIfPlanIsHardFork(plan)
+	if hardfork {
+		upgradeplanhandler.ExecuteSekaiHardForkUpgrade(plan, cli)
+	}
 	return nil
 }
 
-func UpgradeShidai(sekinHome, version string) error {
+func UpgradeShidai(cli *client.Client, sekinHome, version string) error {
 	log.Printf("Trying to upgrade shidai, path: <%v>", sekinHome)
 
 	composeFilePath := filepath.Join(sekinHome, "compose.yml")
@@ -56,14 +60,14 @@ func UpgradeShidai(sekinHome, version string) error {
 		return err
 	}
 
-	currentSekaiImage, err := ReadComposeYMLField(bakCompose, "sekai", "image")
+	currentSekaiImage, err := dockercompose.ReadComposeYMLField(bakCompose, "sekai", "image")
 	if err != nil {
 		fmt.Println("Error reading field:", err)
 		return err
 	}
 	log.Printf("sekai image: %s\n", currentSekaiImage)
 
-	currentInterxImage, err := ReadComposeYMLField(bakCompose, "interx", "image")
+	currentInterxImage, err := dockercompose.ReadComposeYMLField(bakCompose, "interx", "image")
 	if err != nil {
 		fmt.Println("Error reading field:", err)
 		return err
@@ -87,8 +91,8 @@ func UpgradeShidai(sekinHome, version string) error {
 		return err
 	}
 
-	UpdateComposeYMLField(latestCompose, "sekai", "image", currentSekaiImage)
-	UpdateComposeYMLField(latestCompose, "interx", "image", currentInterxImage)
+	dockercompose.UpdateComposeYMLField(latestCompose, "sekai", "image", currentSekaiImage)
+	dockercompose.UpdateComposeYMLField(latestCompose, "interx", "image", currentInterxImage)
 
 	updatedData, err := yaml.Marshal(&latestCompose)
 	if err != nil {
@@ -106,7 +110,7 @@ func UpgradeShidai(sekinHome, version string) error {
 		log.Println("Error writing file:", err)
 		return err
 	}
-	diff, err := CompareYAMLFiles(backupComposeFilePath, composeFilePath)
+	diff, err := dockercompose.CompareYAMLFiles(backupComposeFilePath, composeFilePath)
 	if err != nil {
 		return err
 	}
@@ -119,12 +123,6 @@ func UpgradeShidai(sekinHome, version string) error {
 	}
 
 	var check bool = false
-
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Printf("Error creating Docker client: %v", err)
-		return err
-	}
 
 	attempts := 3
 	for i := range attempts {
@@ -177,27 +175,6 @@ func UpgradeShidai(sekinHome, version string) error {
 	}
 }
 
-func ReadComposeYMLField(compose map[string]interface{}, serviceName, fieldName string) (string, error) {
-	if services, ok := compose["services"].(map[interface{}]interface{}); ok {
-		if service, ok := services[serviceName].(map[interface{}]interface{}); ok {
-			if value, ok := service[fieldName].(string); ok {
-				return value, nil
-			}
-			return "", fmt.Errorf("field %s not found in service %s", fieldName, serviceName)
-		}
-		return "", fmt.Errorf("service %s not found", serviceName)
-	}
-	return "", fmt.Errorf("services section not found in compose file")
-}
-
-func UpdateComposeYMLField(compose map[string]interface{}, serviceName, fieldName, newValue string) {
-	if services, ok := compose["services"].(map[interface{}]interface{}); ok {
-		if service, ok := services[serviceName].(map[interface{}]interface{}); ok {
-			service[fieldName] = newValue
-		}
-	}
-}
-
 func downloadLatestSekinComposeFile(composeFileURL, filepath string) error {
 	out, err := os.Create(filepath)
 	if err != nil {
@@ -221,61 +198,4 @@ func downloadLatestSekinComposeFile(composeFileURL, filepath string) error {
 	}
 
 	return nil
-}
-
-// TODO: this is only for testing purpose, delete after
-func CompareYAMLFiles(file1Path, file2Path string) ([]string, error) {
-	file1Data, err := os.ReadFile(file1Path)
-	if err != nil {
-		return nil, fmt.Errorf("error reading file1: %v", err)
-	}
-	file2Data, err := os.ReadFile(file2Path)
-	if err != nil {
-		return nil, fmt.Errorf("error reading file2: %v", err)
-	}
-	var file1Map map[interface{}]interface{}
-	err = yaml.Unmarshal(file1Data, &file1Map)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling file1: %v", err)
-	}
-	var file2Map map[interface{}]interface{}
-	err = yaml.Unmarshal(file2Data, &file2Map)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling file2: %v", err)
-	}
-	differences := compareMaps(file1Map, file2Map, "")
-	return differences, nil
-}
-func compareMaps(map1, map2 map[interface{}]interface{}, prefix string) []string {
-	var differences []string
-	for key, value1 := range map1 {
-		keyStr := fmt.Sprintf("%s.%v", prefix, key)
-		value2, ok := map2[key]
-		if !ok {
-			differences = append(differences, fmt.Sprintf("Missing key in file2: %s", keyStr))
-			continue
-		}
-
-		switch v1 := value1.(type) {
-		case map[interface{}]interface{}:
-			if v2, ok := value2.(map[interface{}]interface{}); ok {
-				differences = append(differences, compareMaps(v1, v2, keyStr)...)
-			} else {
-				differences = append(differences, fmt.Sprintf("Type mismatch at key: %s", keyStr))
-			}
-		default:
-			if !reflect.DeepEqual(v1, value2) {
-				differences = append(differences, fmt.Sprintf("Different value at key: %s (file1: %v, file2: %v)", keyStr, v1, value2))
-			}
-		}
-	}
-
-	for key := range map2 {
-		if _, ok := map1[key]; !ok {
-			keyStr := fmt.Sprintf("%s.%v", prefix, key)
-			differences = append(differences, fmt.Sprintf("Missing key in file1: %s", keyStr))
-		}
-	}
-
-	return differences
 }

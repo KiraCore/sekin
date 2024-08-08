@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/compose-spec/compose-go/v2/loader"
-	composeTypes "github.com/compose-spec/compose-go/v2/types"
 	"github.com/kiracore/sekin/src/updater/internal/types"
+	dockercompose "github.com/kiracore/sekin/src/updater/internal/upgrade_manager/docker_compose"
 	"github.com/kiracore/sekin/src/updater/internal/utils"
 )
 
@@ -26,7 +25,7 @@ func (c ComposeFileParser) GetLatestSekinVersion() (*types.SekinPackagesVersion,
 	if err != nil {
 		return nil, err
 	}
-	project, err := GetDockerComposeProject(sekinComose)
+	project, err := dockercompose.GetDockerComposeProject(sekinComose)
 	if err != nil {
 		return nil, fmt.Errorf("error when getting compose project: %w", err)
 	}
@@ -69,19 +68,4 @@ func (c ComposeFileParser) GetLatestSekinVersion() (*types.SekinPackagesVersion,
 		}
 	}
 	return response, nil
-}
-
-func GetDockerComposeProject(dockerComposeFile []byte) (*composeTypes.Project, error) {
-	project, err := loader.Load(composeTypes.ConfigDetails{
-		ConfigFiles: []composeTypes.ConfigFile{{Content: dockerComposeFile}},
-	}, func(o *loader.Options) {
-		name, projectNameImperativel := o.GetProjectName() // Set a default project name if none is provided
-		if name == "" {
-			o.SetProjectName("default_project", projectNameImperativel)
-		}
-	})
-	if err != nil {
-		return nil, fmt.Errorf("error loading compose file: %w", err)
-	}
-	return project, nil
 }
