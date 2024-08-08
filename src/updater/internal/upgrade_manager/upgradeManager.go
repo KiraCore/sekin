@@ -1,24 +1,30 @@
 package upgrademanager
 
 import (
+	"log"
+
+	"github.com/docker/docker/client"
+	"github.com/kiracore/sekin/src/updater/internal/types"
 	"github.com/kiracore/sekin/src/updater/internal/upgrade_manager/update"
 	"github.com/kiracore/sekin/src/updater/internal/upgrade_manager/upgrade"
 	"github.com/kiracore/sekin/src/updater/internal/utils"
 )
 
-const update_plan string = "./upgradePlan.json"
-
-const sekin_home string = "/home/km/sekin"
-
 func GetUpgrade() error {
-	exist := utils.FileExists(update_plan)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Printf("Error creating Docker client: %v", err)
+		return err
+	}
+
+	exist := utils.FileExists(types.UPDATE_PLAN)
 	if exist {
-		plan, err := update.CheckUpgradePlan(update_plan)
+		plan, err := update.CheckUpgradePlan(types.UPDATE_PLAN)
 		if err != nil {
 			return err
 		}
-		defer utils.DeleteFile(update_plan)
-		err = upgrade.ExecuteUpgradePlan(plan)
+		defer utils.DeleteFile(types.UPDATE_PLAN)
+		err = upgrade.ExecuteUpgradePlan(plan, cli)
 		if err != nil {
 			return err
 		}
@@ -28,7 +34,7 @@ func GetUpgrade() error {
 			return err
 		}
 		if newVersion != nil {
-			err := upgrade.UpgradeShidai(sekin_home, *newVersion)
+			err := upgrade.UpgradeShidai(cli, types.SEKIN_HOME, *newVersion)
 			if err != nil {
 				return err
 			}

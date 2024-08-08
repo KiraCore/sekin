@@ -21,7 +21,7 @@ const (
 	Same   = "SAME"
 )
 
-func CheckUpgradePlan(path string) (*types.UpgradePlan, error) {
+func CheckUpgradePlan(path string) (*types.PlanData, error) {
 	exist := utils.FileExists(path)
 	if !exist {
 		return nil, fmt.Errorf("file <%v>  does not exist", path)
@@ -30,7 +30,7 @@ func CheckUpgradePlan(path string) (*types.UpgradePlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	var plan types.UpgradePlan
+	var plan types.PlanData
 	err = json.Unmarshal(b, &plan)
 	if err != nil {
 		return nil, err
