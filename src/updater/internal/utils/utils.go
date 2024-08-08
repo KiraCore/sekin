@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -103,4 +104,26 @@ func DoHttpQuery(ctx context.Context, client *http.Client, url, method string) (
 	// log.Debug("Response body read successfully", zap.ByteString("response", body))
 
 	return body, nil
+}
+
+// removes everything inside dirPath
+func RemoveFolderContent(dirPath string) error {
+	d, err := os.Open(dirPath)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dirPath, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
