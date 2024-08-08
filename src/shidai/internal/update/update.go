@@ -6,13 +6,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
+	"github.com/kiracore/sekin/src/shidai/internal/types/endpoints/interx"
 	githubhelper "github.com/kiracore/sekin/src/shidai/internal/update/github_helper"
+	upgradehandler "github.com/kiracore/sekin/src/shidai/internal/update/upgrade_handler"
 	"github.com/kiracore/sekin/src/shidai/internal/utils"
 	"go.uber.org/zap"
 )
@@ -54,12 +57,20 @@ func UpdateRunner(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			err := UpdateOrUpgrade(gh)
+			err := SekinUpdateOrUpgrade(gh)
 			if err != nil {
 				log.Warn("Error when executing update:", zap.Error(err))
 				ticker.Reset(errorUpdateInterval)
 			} else {
-				ticker.Reset(normalUpdateInterval)
+				err := SekaiUpdateOrUpgrade()
+				if err != nil {
+					log.Warn("Error when executing sekai upgrade:", zap.Error(err))
+					ticker.Reset(errorUpdateInterval)
+
+				} else {
+					ticker.Reset(normalUpdateInterval)
+				}
+
 			}
 		}
 
@@ -68,7 +79,7 @@ func UpdateRunner(ctx context.Context) {
 }
 
 // checks for updates and executes updates if needed (auto-update only for shidai)
-func UpdateOrUpgrade(gh Github) error {
+func SekinUpdateOrUpgrade(gh Github) error {
 	log.Info("Checking for update")
 	latest, err := gh.GetLatestSekinVersion()
 	if err != nil {
@@ -97,6 +108,47 @@ func UpdateOrUpgrade(gh Github) error {
 		log.Info("shidai update not required:", zap.Any("results", results))
 	}
 
+	return nil
+}
+
+func SekaiUpdateOrUpgrade() error {
+	log.Info("Checking for hard fork")
+	plan, err := upgradehandler.CheckHardFork(context.Background(), types.INTERX_CONTAINER_ADDRESS)
+	if err != nil {
+		return err
+	}
+	if plan != nil {
+		err = writeUpgradePlanToFile(plan, types.UPGRADE_PLAN_FILE_PATH)
+		if err != nil {
+			return err
+		}
+		err = executeUpdaterBin()
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Info("No hard fork upgrade staged")
+	}
+	return nil
+}
+
+func writeUpgradePlanToFile(plan *interx.PlanData, path string) error {
+	jsonData, err := json.Marshal(plan)
+	if err != nil {
+		return err
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write(jsonData)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	return nil
 }
 
