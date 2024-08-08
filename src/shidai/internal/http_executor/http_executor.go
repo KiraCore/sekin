@@ -70,14 +70,14 @@ func ExecuteCallerCommand(address, port, method string, commandRequest CommandRe
 }
 
 func DoHttpQuery(ctx context.Context, client *http.Client, url, method string) ([]byte, error) {
-	log.Debug("Starting DoHttpQuery", zap.String("url", url), zap.String("method", method))
+	// log.Debug("Starting DoHttpQuery", zap.String("url", url), zap.String("method", method))
 
 	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
 		log.Error("Failed to create HTTP request with context", zap.Error(err))
 		return nil, err
 	}
-	log.Debug("HTTP request with context created successfully", zap.String("url", req.URL.String()))
+	// log.Debug("HTTP request with context created successfully", zap.String("url", req.URL.String()))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -85,7 +85,7 @@ func DoHttpQuery(ctx context.Context, client *http.Client, url, method string) (
 		return nil, err
 	}
 	defer resp.Body.Close()
-	log.Debug("HTTP request sent successfully", zap.Int("status_code", resp.StatusCode))
+	// log.Debug("HTTP request sent successfully", zap.Int("status_code", resp.StatusCode))
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
