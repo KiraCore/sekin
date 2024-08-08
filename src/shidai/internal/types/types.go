@@ -236,8 +236,7 @@ type (
 )
 
 const (
-	SHIDAI_HOME            string = "/shidaid"
-	UPGRADE_PLAN_FILE_PATH string = SHIDAI_HOME + "/upgrade_plan.json"
+	UPGRADE_PLAN_FILE_PATH string = "/upgrade_plan.json"
 
 	SEKAI_HOME          string = "/sekai"
 	INTERX_HOME         string = "/interx"
