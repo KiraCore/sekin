@@ -5,3 +5,4 @@ test/*
 src/shidai/test/*
 shidai/*
 .vscode
+tmp
