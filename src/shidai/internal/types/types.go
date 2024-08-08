@@ -236,8 +236,8 @@ type (
 )
 
 const (
-	SHIDAI_HOME string= "/shidaid"
-	UPGRADE_PLAN_FILE_PATH string=  SHIDAI_HOME+"/upgrade_plan.json"
+	SHIDAI_HOME            string = "/shidaid"
+	UPGRADE_PLAN_FILE_PATH string = SHIDAI_HOME + "/upgrade_plan.json"
 
 	SEKAI_HOME          string = "/sekai"
 	INTERX_HOME         string = "/interx"
@@ -276,6 +276,8 @@ const (
 
 	InvalidOrMissingTx = "invalid or missing tx"
 
+	ResourcePlanIsEmpty = "resources in upgrade plan empty"
+
 	FilePermRO os.FileMode = 0444
 	FilePermRW os.FileMode = 0644
 	FilePermEX os.FileMode = 0755
@@ -289,6 +291,8 @@ const (
 )
 
 var (
+	ErrResourcePlanIsEmpty = errors.New(ResourcePlanIsEmpty)
+
 	ErrInvalidOrMissingMnemonic = errors.New(InvalidOrMissingMnemonic)
 	ErrInvalidOrMissingIP       = errors.New(InvalidOrMissingIP)
 

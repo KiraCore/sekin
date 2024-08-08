@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
+	sekaihelper "github.com/kiracore/sekin/src/shidai/internal/sekai_handler/sekai_helper"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
 	"github.com/kiracore/sekin/src/shidai/internal/types/endpoints/interx"
 	githubhelper "github.com/kiracore/sekin/src/shidai/internal/update/github_helper"
@@ -42,7 +44,7 @@ type Github interface {
 func UpdateRunner(ctx context.Context) {
 	normalUpdateInterval := time.Hour * 24
 	errorUpdateInterval := time.Hour * 3
-
+	hardforkStagedInterval := time.Minute * 40
 	ticker := time.NewTicker(normalUpdateInterval)
 	defer ticker.Stop()
 	gh := githubhelper.ComposeFileParser{}
@@ -62,11 +64,13 @@ func UpdateRunner(ctx context.Context) {
 				log.Warn("Error when executing update:", zap.Error(err))
 				ticker.Reset(errorUpdateInterval)
 			} else {
-				err := SekaiUpdateOrUpgrade()
+				staged, err := SekaiUpdateOrUpgrade()
 				if err != nil {
 					log.Warn("Error when executing sekai upgrade:", zap.Error(err))
 					ticker.Reset(errorUpdateInterval)
-
+				}
+				if staged != nil && *staged {
+					ticker.Reset(hardforkStagedInterval)
 				} else {
 					ticker.Reset(normalUpdateInterval)
 				}
@@ -111,25 +115,57 @@ func SekinUpdateOrUpgrade(gh Github) error {
 	return nil
 }
 
-func SekaiUpdateOrUpgrade() error {
+// returns bool to track if plan exist but consensus is still running and error
+func SekaiUpdateOrUpgrade() (*bool, error) {
 	log.Info("Checking for hard fork")
 	plan, err := upgradehandler.CheckHardFork(context.Background(), types.INTERX_CONTAINER_ADDRESS)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if plan != nil {
+	if plan == nil {
+		log.Info("No hard fork upgrade staged")
+		return nil, nil
+	}
+
+	current, err := getCurrentVersions()
+	if err != nil {
+		return nil, err
+	}
+
+	var status string
+
+	//check if resources are not nil
+	if len(plan.Plan.Resources) > 0 && plan.Plan.Resources[0] != (interx.UpgradePlanResource{}) {
+		status, err = CompareVersions(current.Sekai, plan.Plan.Resources[0].Version)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, types.ErrResourcePlanIsEmpty
+	}
+
+	if status != Lower {
+		return nil, nil
+	}
+
+	consensus, err := sekaihelper.CheckConsensus(context.Background(), types.SEKAI_CONTAINER_ADDRESS, strconv.Itoa(types.DEFAULT_RPC_PORT), time.Second*30)
+	if err != nil {
+		return nil, err
+	}
+	if !consensus {
 		err = writeUpgradePlanToFile(plan, types.UPGRADE_PLAN_FILE_PATH)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		err = executeUpdaterBin()
 		if err != nil {
-			return err
+			return nil, err
 		}
 	} else {
-		log.Info("No hard fork upgrade staged")
+		return &consensus, nil
 	}
-	return nil
+
+	return nil, nil
 }
 
 func writeUpgradePlanToFile(plan *interx.PlanData, path string) error {
