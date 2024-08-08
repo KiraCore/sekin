@@ -56,6 +56,8 @@ jobs:
           file: ./shidai.Dockerfile
           push: true
           tags: ghcr.io/kiracore/sekin/shidai:${{ steps.create_tag.outputs.new_tag }}
+          build-args: |
+            VERSION=${{ steps.create_tag.outputs.new_tag }}
           labels:
             org.opencontainers.image.authors="kira.network"
             org.opencontainers.image.url="https://github.com/KiraCore/sekin"

@@ -42,7 +42,6 @@ var (
 	log             *zap.Logger = logger.GetLogger()
 	CommandHandlers             = map[string]HandlerFunc{
 		"join":   handleJoinCommand,
-		"status": handleStatusCommand,
 		"start":  handleStartComamnd,
 		"tx":     handleTxCommand,
 		"sekaid": handleSekaidCommand,
@@ -237,17 +236,6 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 	// Example of using the IP, and similar for other fields
 	// This function would contain the logic specific to handling a join command
 	return fmt.Sprintf("Join command processed for IP: %s", ip), nil
-}
-
-func handleStatusCommand(args map[string]interface{}) (string, error) {
-	// TODO:
-	// 1. Return publicIP
-	// 2. Return validatorAddress
-	// 3. Return validatorStatus
-	// 4. Return missChance
-	// 5.
-
-	return "", nil
 }
 
 func handleStartComamnd(args map[string]interface{}) (string, error) {

@@ -11,7 +11,7 @@ import (
 var Version string
 
 // NewRootCmd creates and returns the root command
-func NewRootCmd() *cobra.Command {
+func NewRootCmd(v string) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "shidai",
 		Short: "Shidai is an Infra manager tool.",
@@ -19,20 +19,20 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	// Add version command
-	rootCmd.AddCommand(versionCmd())
+	rootCmd.AddCommand(versionCmd(v))
 	rootCmd.AddCommand(startCmd())
 
 	return rootCmd
 }
 
 // versionCmd returns a version command for Cobra
-func versionCmd() *cobra.Command {
+func versionCmd(v string) *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Print the version number of the application",
 		Long:  `The version starts from 1.x.x and follow semver system`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(Version)
+			fmt.Println(v)
 		},
 	}
 }

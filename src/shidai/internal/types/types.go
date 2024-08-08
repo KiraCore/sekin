@@ -6,6 +6,12 @@ import (
 )
 
 type (
+	SekinPackagesVersion struct {
+		Sekai  string
+		Interx string
+		Shidai string
+	}
+
 	InfraFiles map[string]string
 
 	AppInfo struct {
@@ -230,6 +236,8 @@ type (
 )
 
 const (
+	UPGRADE_PLAN_FILE_PATH string = "/upgrade_plan.json"
+
 	SEKAI_HOME          string = "/sekai"
 	INTERX_HOME         string = "/interx"
 	DEFAULT_INTERX_PORT int    = 11000
@@ -267,15 +275,23 @@ const (
 
 	InvalidOrMissingTx = "invalid or missing tx"
 
+	ResourcePlanIsEmpty = "resources in upgrade plan empty"
+
 	FilePermRO os.FileMode = 0444
 	FilePermRW os.FileMode = 0644
 	FilePermEX os.FileMode = 0755
 
 	DirPermRO os.FileMode = 0555
 	DirPermWR os.FileMode = 0755
+
+	UPDATER_BIN_PATH = "/updater"
+
+	SEKIN_LATEST_COMPOSE_URL = "https://raw.githubusercontent.com/KiraCore/sekin/main/compose.yml"
 )
 
 var (
+	ErrResourcePlanIsEmpty = errors.New(ResourcePlanIsEmpty)
+
 	ErrInvalidOrMissingMnemonic = errors.New(InvalidOrMissingMnemonic)
 	ErrInvalidOrMissingIP       = errors.New(InvalidOrMissingIP)
 
