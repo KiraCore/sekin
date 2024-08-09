@@ -42,13 +42,9 @@ type Github interface {
 
 // Update check runner (run in goroutine)
 func UpdateRunner(ctx context.Context) {
-	log.Info("Starting upgrade runner")
-	// normalUpdateInterval := time.Hour * 24
-	// errorUpdateInterval := time.Hour * 3
-	// hardforkStagedInterval := time.Minute * 40
-	normalUpdateInterval := time.Minute * 1
-	errorUpdateInterval := time.Minute * 1
-	hardforkStagedInterval := time.Minute * 1
+	normalUpdateInterval := time.Hour * 24
+	errorUpdateInterval := time.Hour * 3
+	hardforkStagedInterval := time.Minute * 40
 	ticker := time.NewTicker(normalUpdateInterval)
 	defer ticker.Stop()
 	gh := githubhelper.ComposeFileParser{}
@@ -67,18 +63,19 @@ func UpdateRunner(ctx context.Context) {
 			if err != nil {
 				log.Warn("Error when executing update:", zap.Error(err))
 				ticker.Reset(errorUpdateInterval)
-			}
-			staged, err := SekaiUpdateOrUpgrade()
-			if err != nil {
-				log.Warn("Error when executing sekai upgrade:", zap.Error(err))
-				ticker.Reset(errorUpdateInterval)
-			}
-			if staged != nil && *staged {
-				ticker.Reset(hardforkStagedInterval)
 			} else {
-				ticker.Reset(normalUpdateInterval)
-			}
+				staged, err := SekaiUpdateOrUpgrade()
+				if err != nil {
+					log.Warn("Error when executing sekai upgrade:", zap.Error(err))
+					ticker.Reset(errorUpdateInterval)
+				}
+				if staged != nil && *staged {
+					ticker.Reset(hardforkStagedInterval)
+				} else {
+					ticker.Reset(normalUpdateInterval)
+				}
 
+			}
 		}
 
 	}
@@ -148,7 +145,6 @@ func SekaiUpdateOrUpgrade() (*bool, error) {
 	}
 
 	if status != Lower {
-		log.Debug("version is not lower")
 		return nil, nil
 	}
 
@@ -189,7 +185,6 @@ func writeUpgradePlanToFile(plan *interx.PlanData, path string) error {
 		fmt.Println(err)
 		return err
 	}
-	log.Debug("Creating upgrade plan file", zap.String("path", path))
 	return nil
 }
 
