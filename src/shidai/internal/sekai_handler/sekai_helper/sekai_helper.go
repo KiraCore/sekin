@@ -74,7 +74,7 @@ func CheckSekaiStart(ctx context.Context) error {
 func CheckConsensus(ctx context.Context, ipAddress, rpcPort string, timePeriod time.Duration) (bool, error) {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
-
+	log.Debug("Checking consensus")
 	timer := time.NewTimer(timePeriod)
 	defer timer.Stop()
 	checkStatus, err := GetSekaidStatus(ctx, ipAddress, rpcPort)
@@ -90,10 +90,12 @@ func CheckConsensus(ctx context.Context, ipAddress, rpcPort string, timePeriod t
 			}
 			log.Debug("check block height", zap.String("check height", checkStatus.Result.SyncInfo.LatestBlockHeight), zap.String("current height", currentStatus.Result.SyncInfo.LatestBlockHeight))
 			if currentStatus.Result.SyncInfo.LatestBlockHeight > checkStatus.Result.SyncInfo.LatestBlockHeight {
+				log.Debug("Blocks are producing")
 				return true, nil
 			}
 
 		case <-timer.C:
+			log.Debug("Blocks are not minting")
 			return false, nil
 		}
 	}
