@@ -23,7 +23,7 @@ func GetUpgrade() error {
 		if err != nil {
 			return err
 		}
-		defer utils.DeleteFile(types.UPDATE_PLAN)
+		
 		err = upgrade.ExecuteUpgradePlan(plan, cli)
 		if err != nil {
 			return err

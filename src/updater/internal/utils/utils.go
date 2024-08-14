@@ -108,6 +108,7 @@ func DoHttpQuery(ctx context.Context, client *http.Client, url, method string) (
 
 // removes everything inside dirPath
 func RemoveFolderContent(dirPath string) error {
+	log.Println("removing content from:", dirPath)
 	d, err := os.Open(dirPath)
 	if err != nil {
 		return err
@@ -126,4 +127,9 @@ func RemoveFolderContent(dirPath string) error {
 		}
 	}
 	return nil
+}
+
+func ValidatePort(port int) bool {
+	isValid := port > 0 && port <= 65535
+	return isValid
 }

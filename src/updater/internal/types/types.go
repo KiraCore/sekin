@@ -49,12 +49,18 @@ type PlanData struct {
 const SEKIN_LATEST_COMPOSE_URL = "https://raw.githubusercontent.com/KiraCore/sekin/main/compose.yml"
 const SEKAI_CONTAINER_ID = "sekin-sekai-1"
 
-const UPDATE_PLAN string = "./upgradePlan.json"
+const UPDATE_PLAN string = "./upgrade_plan.json"
 
 const SEKIN_HOME string = "/home/km/sekin"
 const SEKAI_HOME string = "/home/km/sekin" + CONTAINERIZED_SEKAI_HOME
+
+// TODO: FOR TESTING PURPOSES, DELETE AFTER
+// const SEKIN_HOME string = "/home/peepo/Projects/Go/KIRA/sekin"
+// const SEKAI_HOME string = "/home/peepo/Projects/Go/KIRA/sekin" + CONTAINERIZED_SEKAI_HOME
 
 const CONTAINERIZED_SEKAI_HOME string = "/sekai"                               //from sekai container prospective
 const CONTAINERIZED_SEKAI_CONFIG string = CONTAINERIZED_SEKAI_HOME + "/config" //from sekai container prospective
 
 const SEKAI_IMAGE_NAME string = "ghcr.io/kiracore/sekin/sekai"
+
+const SEKAI_CONTAINER_ADDRESS string = "sekai.local"
