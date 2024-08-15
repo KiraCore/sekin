@@ -3,7 +3,7 @@ interx/*
 syslog-data/*
 test/*
 src/shidai/test/*
-src/updater/test/test.go
+src/updater/test/
 shidai/*
 .vscode
 tmp
