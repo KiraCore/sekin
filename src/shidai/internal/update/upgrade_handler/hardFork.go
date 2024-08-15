@@ -2,12 +2,12 @@ package upgradehandler
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/kiracore/sekin/src/shidai/internal/types"
 	"github.com/kiracore/sekin/src/shidai/internal/types/endpoints/interx"
 	"github.com/kiracore/sekin/src/shidai/internal/utils"
+	"go.uber.org/zap"
 )
 
 const SEKAI_ID_RESOURCE = "sekai"
@@ -23,7 +23,7 @@ func CheckHardFork(ctx context.Context, interxAddress string) (*interx.PlanData,
 		return nil, err
 	}
 	var plan *interx.PlanData
-	fmt.Println(currentPlan, nextPlan)
+	log.Debug("Hard fork check", zap.Any("Current plan", currentPlan), zap.Any("Next plan", nextPlan))
 	if currentPlan != nil {
 		plan = currentPlan
 	} else {
@@ -41,32 +41,6 @@ func CheckHardFork(ctx context.Context, interxAddress string) (*interx.PlanData,
 	} else {
 		return nil, nil
 	}
-	// if hardFork {
-	// 	consensus, err := sekaihelper.CheckConsensus(ctx, types.defa, strconv.Itoa(types.DEFAULT_RPC_PORT), time.Second*30)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-
-	// }
-	// 	if !consensus {
-	// 		//write upgrade plan
-
-	// 		//run upgrader binary:
-	// 		//kill sekaid
-	// 		//export genesis
-	// 		//update compose.yml
-	// 		//run updated compose.yml
-	// 		//sekaid new-genesis-from-exported
-	// 		//rm -rf /data/.sekai/data
-	// 		//mkdir /data/.sekai/data
-	// 		//new priv_validator_state.json
-	// 	}
-	// 	fmt.Println(consensus)
-	// 	fmt.Println(currentPlan)
-	// 	fmt.Println(nextPlan)
-	// } else {
-	// 	return nil, nil
-
 }
 
 // upgrade plan resources should be valid:
