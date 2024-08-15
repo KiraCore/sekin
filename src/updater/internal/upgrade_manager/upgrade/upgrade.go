@@ -27,7 +27,10 @@ func ExecuteUpgradePlan(plan *types.PlanData, cli *client.Client) error {
 	log.Printf("Executing upgrade plan: %+v", plan)
 	hardfork := upgradeplanhandler.CheckIfPlanIsHardFork(plan)
 	if hardfork {
-		upgradeplanhandler.ExecuteSekaiHardForkUpgrade(plan, cli)
+		err := upgradeplanhandler.ExecuteSekaiHardForkUpgrade(plan, cli)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
