@@ -42,9 +42,16 @@ type Github interface {
 
 // Update check runner (run in goroutine)
 func UpdateRunner(ctx context.Context) {
-	normalUpdateInterval := time.Hour * 24
+	log.Info("Starting upgrade runner")
+	normalUpdateInterval := time.Hour * 6
 	errorUpdateInterval := time.Hour * 3
-	hardforkStagedInterval := time.Minute * 40
+	hardforkStagedInterval := time.Minute * 20
+
+	// TODO: FOR TESTING PURPOSES, DELETE AFTER
+	// normalUpdateInterval := time.Minute * 1
+	// errorUpdateInterval := time.Minute * 1
+	// hardforkStagedInterval := time.Minute * 1
+
 	ticker := time.NewTicker(normalUpdateInterval)
 	defer ticker.Stop()
 	gh := githubhelper.ComposeFileParser{}
@@ -63,19 +70,18 @@ func UpdateRunner(ctx context.Context) {
 			if err != nil {
 				log.Warn("Error when executing update:", zap.Error(err))
 				ticker.Reset(errorUpdateInterval)
-			} else {
-				staged, err := SekaiUpdateOrUpgrade()
-				if err != nil {
-					log.Warn("Error when executing sekai upgrade:", zap.Error(err))
-					ticker.Reset(errorUpdateInterval)
-				}
-				if staged != nil && *staged {
-					ticker.Reset(hardforkStagedInterval)
-				} else {
-					ticker.Reset(normalUpdateInterval)
-				}
-
 			}
+			staged, err := SekaiUpdateOrUpgrade()
+			if err != nil {
+				log.Warn("Error when executing sekai upgrade:", zap.Error(err))
+				ticker.Reset(errorUpdateInterval)
+			}
+			if staged != nil && *staged {
+				ticker.Reset(hardforkStagedInterval)
+			} else {
+				ticker.Reset(normalUpdateInterval)
+			}
+
 		}
 
 	}
@@ -217,6 +223,31 @@ func getCurrentVersions() (*types.SekinPackagesVersion, error) {
 }
 
 func executeUpdaterBin() error {
+	log.Debug("Executing update binary", zap.String("bin path", types.UPDATER_BIN_PATH))
+
+	// TODO: for testing, delete after
+	//
+	// folder := "/shidaid"
+	// Open the directory
+	// dir, err := os.Open(folder)
+	// if err != nil {
+	// 	log.Debug("Error opening directory:", zap.Error(err))
+	// }
+	// defer dir.Close()
+
+	// // Read the directory's contents
+	// files, err := dir.Readdir(-1)
+	// if err != nil {
+	// 	log.Debug("Error reading directory:", zap.Error(err))
+	// }
+
+	// // Iterate over the files and print their names
+	// for _, file := range files {
+	// 	if !file.IsDir() {
+	// 		// .Println("File:", file.Name())
+	// 		log.Debug("FILE:", zap.String(fmt.Sprintf("file from %s:", folder), file.Name()))
+	// 	}
+	// }
 	cmd := exec.Command(types.UPDATER_BIN_PATH)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
