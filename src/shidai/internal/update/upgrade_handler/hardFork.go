@@ -24,6 +24,7 @@ func CheckHardFork(ctx context.Context, interxAddress string) (*interx.PlanData,
 	}
 	var plan *interx.PlanData
 	log.Debug("Hard fork check", zap.Any("Current plan", currentPlan), zap.Any("Next plan", nextPlan))
+	//TODO: what if upgrade already happen and it stuck in current plan?
 	if currentPlan != nil {
 		plan = currentPlan
 	} else {
