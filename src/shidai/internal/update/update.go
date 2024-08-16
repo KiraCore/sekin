@@ -142,15 +142,20 @@ func SekaiUpdateOrUpgrade() (*bool, error) {
 
 	//check if resources are not nil
 	if len(plan.Plan.Resources) > 0 && plan.Plan.Resources[0] != (interx.UpgradePlanResource{}) {
+		log.Debug("Comparing versions", zap.Strings("current and plan version", []string{current.Sekai, plan.Plan.Resources[0].Version}))
 		status, err = CompareVersions(current.Sekai, plan.Plan.Resources[0].Version)
 		if err != nil {
 			return nil, err
 		}
 	} else {
+		log.Debug("resources in upgrade plan empty")
 		return nil, types.ErrResourcePlanIsEmpty
 	}
 
+	log.Debug("versions status", zap.String("status", status))
+
 	if status != Lower {
+		log.Debug("status != Lower")
 		return nil, nil
 	}
 
