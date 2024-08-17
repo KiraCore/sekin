@@ -4,12 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
@@ -96,7 +93,7 @@ func SekinUpdateOrUpgrade(gh Github) error {
 		return err
 	}
 
-	current, err := getCurrentVersions()
+	current, err := upgradehandler.GetCurrentVersions()
 	if err != nil {
 		return err
 	}
@@ -133,7 +130,7 @@ func SekaiUpdateOrUpgrade() (*bool, error) {
 		return nil, nil
 	}
 
-	current, err := getCurrentVersions()
+	current, err := upgradehandler.GetCurrentVersions()
 	if err != nil {
 		return nil, err
 	}
@@ -197,34 +194,6 @@ func writeUpgradePlanToFile(plan *interx.PlanData, path string) error {
 		return err
 	}
 	return nil
-}
-
-func getCurrentVersions() (*types.SekinPackagesVersion, error) {
-	out, err := http.Get("http://localhost:8282/status")
-	if err != nil {
-		return nil, err
-	}
-	defer out.Body.Close()
-
-	b, err := io.ReadAll(out.Body)
-	if err != nil {
-		return nil, err
-	}
-	var status types.StatusResponse
-
-	err = json.Unmarshal(b, &status)
-	if err != nil {
-		// fmt.Println(string(b))
-		return nil, err
-	}
-
-	pkgVersions := types.SekinPackagesVersion{
-		Sekai:  strings.ReplaceAll(status.Sekai.Version, "\n", ""),
-		Interx: strings.ReplaceAll(status.Interx.Version, "\n", ""),
-		Shidai: strings.ReplaceAll(status.Shidai.Version, "\n", ""),
-	}
-
-	return &pkgVersions, nil
 }
 
 func executeUpdaterBin() error {

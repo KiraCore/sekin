@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	httpexecutor "github.com/kiracore/sekin/src/shidai/internal/http_executor"
+	"github.com/kiracore/sekin/src/shidai/internal/types"
 
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/types/endpoints/interx"
@@ -64,4 +67,32 @@ func checkIfPlanIsNull(plan *interx.PlanData) bool {
 	} else {
 		return false
 	}
+}
+
+func GetCurrentVersions() (*types.SekinPackagesVersion, error) {
+	out, err := http.Get("http://localhost:8282/status")
+	if err != nil {
+		return nil, err
+	}
+	defer out.Body.Close()
+
+	b, err := io.ReadAll(out.Body)
+	if err != nil {
+		return nil, err
+	}
+	var status types.StatusResponse
+
+	err = json.Unmarshal(b, &status)
+	if err != nil {
+		// fmt.Println(string(b))
+		return nil, err
+	}
+
+	pkgVersions := types.SekinPackagesVersion{
+		Sekai:  strings.ReplaceAll(status.Sekai.Version, "\n", ""),
+		Interx: strings.ReplaceAll(status.Interx.Version, "\n", ""),
+		Shidai: strings.ReplaceAll(status.Shidai.Version, "\n", ""),
+	}
+
+	return &pkgVersions, nil
 }
