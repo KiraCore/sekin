@@ -83,8 +83,3 @@ func checkIfPlanIsHardFork(plan *interx.PlanData, status *interx.Status) bool {
 
 	return true
 }
-
-func ParseUpgradePlan(plan *interx.PlanData) error {
-
-	return nil
-}
