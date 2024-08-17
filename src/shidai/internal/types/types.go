@@ -239,7 +239,7 @@ const (
 	// UPGRADE_PLAN_FILE_PATH string = "/upgrade_plan.json"
 	// TODO: FOR TESTING PURPOSES, DELETE AFTER
 	UPGRADE_PLAN_FILE_PATH string = "/shidaid/upgrade_plan.json"
-	
+
 	// UPDATER_BIN_PATH = "/updater"
 	UPDATER_BIN_PATH = "/shidaid/updater"
 
@@ -280,6 +280,8 @@ const (
 
 	InvalidOrMissingTx = "invalid or missing tx"
 
+	PlanIsEmptyOrNil = " plan is empty or nil"
+
 	ResourcePlanIsEmpty = "resources in upgrade plan empty"
 
 	FilePermRO os.FileMode = 0444
@@ -306,6 +308,8 @@ var (
 
 	ErrNoPublicIPAddresses       = errors.New(NoPublicIPAddresses)
 	ErrMultiplePublicIPAddresses = errors.New(MultiplePublicIPAddresses)
+
+	ErrPlanIsEmptyOrNil = errors.New(PlanIsEmptyOrNil)
 
 	SekaiFiles = InfraFiles{
 		"config.toml":        "/sekai/config/config.toml",

@@ -56,12 +56,23 @@ func UpdateRunner(ctx context.Context) {
 				log.Warn("Error when executing update:", zap.Error(err))
 				ticker.Reset(errorUpdateInterval)
 			}
-			staged, err := SekaiUpdateOrUpgrade()
+			sekaiStaged, err := SekaiUpdateOrUpgrade()
 			if err != nil {
 				log.Warn("Error when executing sekai upgrade:", zap.Error(err))
 				ticker.Reset(errorUpdateInterval)
 			}
-			if staged != nil && *staged {
+			if sekaiStaged != nil && *sekaiStaged {
+				ticker.Reset(hardforkStagedInterval)
+			} else {
+				ticker.Reset(normalUpdateInterval)
+			}
+
+			interxStaged, err := InterxUpdateOrUpgrade()
+			if err != nil {
+				log.Warn("Error when executing interx upgrade:", zap.Error(err))
+				ticker.Reset(errorUpdateInterval)
+			}
+			if interxStaged {
 				ticker.Reset(hardforkStagedInterval)
 			} else {
 				ticker.Reset(normalUpdateInterval)
@@ -71,6 +82,41 @@ func UpdateRunner(ctx context.Context) {
 
 	}
 
+}
+
+// checks and performs interx updates
+func InterxUpdateOrUpgrade() (bool, error) {
+	log.Info("Checking for Interx update")
+	plan, err := upgradehandler.CheckInterxUpgrade(context.Background(), types.INTERX_CONTAINER_ADDRESS)
+	if err != nil {
+		return false, err
+	}
+	if plan == nil {
+		log.Info("No interx updates are staged")
+		return false, nil
+	}
+	planTime := plan.Plan.UpgradeTime
+	upgradeTime, err := strconv.Atoi(planTime)
+	if err != nil {
+		return false, err
+	}
+	currentTime := time.Now().Unix()
+
+	if currentTime >= int64(upgradeTime) {
+		err = writeUpgradePlanToFile(plan, types.UPGRADE_PLAN_FILE_PATH)
+		if err != nil {
+			return false, err
+		}
+		// TODO: add interx upgrade handler for upgrader binary
+		err = executeUpdaterBin()
+		if err != nil {
+			return false, err
+		}
+	} else {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // checks for updates and executes updates if needed (auto-update only for shidai)
