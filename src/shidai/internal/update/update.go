@@ -15,23 +15,11 @@ import (
 	"github.com/kiracore/sekin/src/shidai/internal/types/endpoints/interx"
 	githubhelper "github.com/kiracore/sekin/src/shidai/internal/update/github_helper"
 	upgradehandler "github.com/kiracore/sekin/src/shidai/internal/update/upgrade_handler"
-	"github.com/kiracore/sekin/src/shidai/internal/utils"
+	versioncontroll "github.com/kiracore/sekin/src/shidai/internal/update/version_controll"
 	"go.uber.org/zap"
 )
 
 var log = logger.GetLogger() // Initialize the logger instance at the package level
-
-const (
-	Lower  = "LOWER"
-	Higher = "HIGHER"
-	Same   = "SAME"
-)
-
-type ComparisonResult struct {
-	Sekai  string
-	Interx string
-	Shidai string
-}
 
 type Github interface {
 	GetLatestSekinVersion() (*types.SekinPackagesVersion, error)
@@ -98,7 +86,7 @@ func SekinUpdateOrUpgrade(gh Github) error {
 		return err
 	}
 
-	results, err := Compare(current, latest)
+	results, err := versioncontroll.Compare(current, latest)
 	if err != nil {
 		return err
 	}
@@ -106,7 +94,7 @@ func SekinUpdateOrUpgrade(gh Github) error {
 	log.Debug("SEKIN VERSIONS:", zap.Any("latest", latest), zap.Any("current", current))
 	log.Debug("RESULT:", zap.Any("result", results))
 
-	if results.Shidai == Lower {
+	if results.Shidai == versioncontroll.Lower {
 		err = executeUpdaterBin()
 		if err != nil {
 			return err
@@ -140,7 +128,7 @@ func SekaiUpdateOrUpgrade() (*bool, error) {
 	//check if resources are not nil
 	if len(plan.Plan.Resources) > 0 && plan.Plan.Resources[0] != (interx.UpgradePlanResource{}) {
 		log.Debug("Comparing versions", zap.Strings("current and plan version", []string{current.Sekai, plan.Plan.Resources[0].Version}))
-		status, err = CompareVersions(current.Sekai, plan.Plan.Resources[0].Version)
+		status, err = versioncontroll.CompareVersions(current.Sekai, plan.Plan.Resources[0].Version)
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +139,7 @@ func SekaiUpdateOrUpgrade() (*bool, error) {
 
 	log.Debug("versions status", zap.String("status", status))
 
-	if status != Lower {
+	if status != versioncontroll.Lower {
 		log.Debug("status != Lower")
 		return nil, nil
 	}
@@ -228,68 +216,4 @@ func executeUpdaterBin() error {
 		return fmt.Errorf("failed to execute binary: %w, output: %s", err, output)
 	}
 	return nil
-}
-
-// version has to be in format "v0.4.49"
-// CompareVersions compares two version strings and returns 1 if v1 > v2, -1 if v1 < v2, and 0 if they are equal.
-//
-//	if v1 > v2 = higher, if v1 < v2 = lower else equal
-func CompareVersions(v1, v2 string) (string, error) {
-	major1, minor1, patch1, err := utils.ParseVersion(v1)
-	if err != nil {
-		return "", err
-	}
-
-	major2, minor2, patch2, err := utils.ParseVersion(v2)
-	if err != nil {
-		return "", err
-	}
-
-	if major1 > major2 {
-		return Higher, nil
-	} else if major1 < major2 {
-		return Lower, nil
-	}
-
-	if minor1 > minor2 {
-		return Higher, nil
-	} else if minor1 < minor2 {
-		return Lower, nil
-	}
-
-	if patch1 > patch2 {
-		return Higher, nil
-	} else if patch1 < patch2 {
-		return Lower, nil
-	}
-
-	return Same, nil
-}
-
-// version has to be in format "v0.4.49"
-// CompareVersions compares two version strings and returns 1 if v1 > v2, -1 if v1 < v2, and 0 if they are equal.
-//
-//	if v1 > v2 = higher, if v1 < v2 = lower else equal
-//
-// Compare compares two SekinPackagesVersion instances and returns the differences, including version comparison.
-func Compare(current, latest *types.SekinPackagesVersion) (ComparisonResult, error) {
-	var result ComparisonResult
-	var err error
-
-	result.Sekai, err = CompareVersions(current.Sekai, latest.Sekai)
-	if err != nil {
-		return result, err
-	}
-
-	result.Interx, err = CompareVersions(current.Interx, latest.Interx)
-	if err != nil {
-		return result, err
-	}
-
-	result.Shidai, err = CompareVersions(current.Shidai, latest.Shidai)
-	if err != nil {
-		return result, err
-	}
-
-	return result, nil
 }
