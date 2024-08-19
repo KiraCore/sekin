@@ -26,8 +26,15 @@ const ShidaiContainerName string = "sekin-" + ShidaiServiceName + "-1"
 func ExecuteUpgradePlan(plan *types.PlanData, cli *client.Client) error {
 	log.Printf("Executing upgrade plan: %+v", plan)
 	hardfork := upgradeplanhandler.CheckIfPlanIsHardFork(plan)
-	if hardfork {
+	softfork := upgradeplanhandler.CheckIfPlanIsInterxUpgrade(plan)
+	switch {
+	case hardfork:
 		err := upgradeplanhandler.ExecuteSekaiHardForkUpgrade(plan, cli)
+		if err != nil {
+			return err
+		}
+	case softfork:
+		err := upgradeplanhandler.ExecuteInterxSoftForkUpgrade(plan, cli)
 		if err != nil {
 			return err
 		}

@@ -64,3 +64,6 @@ const CONTAINERIZED_SEKAI_CONFIG string = CONTAINERIZED_SEKAI_HOME + "/config" /
 const SEKAI_IMAGE_NAME string = "ghcr.io/kiracore/sekin/sekai"
 
 const SEKAI_CONTAINER_ADDRESS string = "sekai.local"
+
+const INTERX_CONTAINER_ID = "sekin-interx-1"
+const CONTAINERIZED_INTERX_HOME string = "/interx"
