@@ -71,11 +71,14 @@ func UpdateRunner(ctx context.Context) {
 			if err != nil {
 				log.Warn("Error when executing interx upgrade:", zap.Error(err))
 				ticker.Reset(errorUpdateInterval)
-			}
-			if interxStaged {
-				ticker.Reset(hardforkStagedInterval)
 			} else {
-				ticker.Reset(normalUpdateInterval)
+				if interxStaged {
+					log.Debug("interx update staged")
+					ticker.Reset(hardforkStagedInterval)
+				} else {
+					log.Debug("no interx updates are staged")
+					ticker.Reset(normalUpdateInterval)
+				}
 			}
 
 		}
@@ -86,8 +89,9 @@ func UpdateRunner(ctx context.Context) {
 
 // checks and performs interx updates
 func InterxUpdateOrUpgrade() (bool, error) {
-	log.Info("Checking for Interx update")
+	log.Info("Checking for Interx update plans")
 	plan, err := upgradehandler.CheckInterxUpgrade(context.Background(), types.INTERX_CONTAINER_ADDRESS)
+	log.Debug("Plan after check", zap.Any("plan", plan))
 	if err != nil {
 		return false, err
 	}
@@ -101,13 +105,12 @@ func InterxUpdateOrUpgrade() (bool, error) {
 		return false, err
 	}
 	currentTime := time.Now().Unix()
-
+	log.Debug("checking upgrade time", zap.Int64("current", currentTime), zap.Int64("upgrade", int64(upgradeTime)))
 	if currentTime >= int64(upgradeTime) {
 		err = writeUpgradePlanToFile(plan, types.UPGRADE_PLAN_FILE_PATH)
 		if err != nil {
 			return false, err
 		}
-		// TODO: add interx upgrade handler for upgrader binary
 		err = executeUpdaterBin()
 		if err != nil {
 			return false, err
@@ -211,6 +214,7 @@ func SekaiUpdateOrUpgrade() (*bool, error) {
 }
 
 func writeUpgradePlanToFile(plan *interx.PlanData, path string) error {
+	log.Debug("creating upgrade plan", zap.String("path", path), zap.Any("play", plan))
 	jsonData, err := json.Marshal(plan)
 	if err != nil {
 		return err
