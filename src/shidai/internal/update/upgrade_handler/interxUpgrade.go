@@ -53,6 +53,9 @@ func CheckInterxUpgrade(ctx context.Context, interxAddress string) (*interx.Plan
 
 // the current version of interx has to be lower then the version mentioned in upgrade plan
 func interxPlanIsValid(currentVersions *types.SekinPackagesVersion, plan *interx.PlanData) (bool, error) {
+	if plan == nil {
+		return false, nil
+	}
 	if len(plan.Plan.Resources) == 0 || plan.Plan.Resources[0] == (interx.UpgradePlanResource{}) {
 		log.Debug("resources in upgrade plan empty")
 		return false, types.ErrPlanIsEmptyOrNil

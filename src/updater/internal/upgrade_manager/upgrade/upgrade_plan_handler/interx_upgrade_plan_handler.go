@@ -40,11 +40,18 @@ func ExecuteInterxSoftForkUpgrade(plan *types.PlanData, cli *client.Client) erro
 		return err
 	}
 
-	log.Printf("Killing interx container with %v code", docker.SIGKILL)
-	err = docker.KillContainerWithSigkill(context.Background(), cli, types.INTERX_CONTAINER_ID, docker.SIGKILL)
+	container, err := cli.ContainerInspect(context.Background(), types.INTERX_CONTAINER_ID)
 	if err != nil {
-		log.Printf("ERROR: %v", err.Error())
 		return err
+	}
+
+	if !container.State.Running {
+		log.Printf("Killing interx container with %v code", docker.SIGKILL)
+		err = docker.KillContainerWithSigkill(context.Background(), cli, types.INTERX_CONTAINER_ID, docker.SIGKILL)
+		if err != nil {
+			log.Printf("ERROR: %v", err.Error())
+			return err
+		}
 	}
 
 	log.Println("reading", composeFilePath)
@@ -61,7 +68,7 @@ func ExecuteInterxSoftForkUpgrade(plan *types.PlanData, cli *client.Client) erro
 
 	log.Println("updating INTERX image field")
 
-	dockercompose.UpdateComposeYMLField(currentCompose, "interx", "image", fmt.Sprintf("%v:%v", "ghcr.io/kiracore/sekin/sekai", plan.Plan.Resources[0].Version))
+	dockercompose.UpdateComposeYMLField(currentCompose, "interx", "image", fmt.Sprintf("%v:%v", "ghcr.io/kiracore/sekin/interx", plan.Plan.Resources[0].Version))
 
 	updatedData, err := yaml.Marshal(&currentCompose)
 	if err != nil {
@@ -95,7 +102,7 @@ func ExecuteInterxSoftForkUpgrade(plan *types.PlanData, cli *client.Client) erro
 	}
 
 	check := false
-	attempts := 0
+	attempts := 3
 	for i := range attempts {
 		status, err := docker.CheckContainerState(cli, types.INTERX_CONTAINER_ID)
 		if err != nil {
@@ -121,8 +128,8 @@ func ExecuteInterxSoftForkUpgrade(plan *types.PlanData, cli *client.Client) erro
 			return fmt.Errorf("error deleting backup file: %w", err)
 		}
 	} else {
-		log.Println("ERROR: sekai container cannot start")
-		return fmt.Errorf("ERROR: sekai container cannot start")
+		log.Println("ERROR: interx container cannot start")
+		return fmt.Errorf("ERROR: interx container cannot start")
 	}
 
 	log.Println("deleting upgrade plan")
