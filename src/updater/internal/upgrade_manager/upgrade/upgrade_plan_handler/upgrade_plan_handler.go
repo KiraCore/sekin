@@ -48,7 +48,7 @@ func ExecuteSekaiHardForkUpgrade(plan *types.PlanData, cli *client.Client) error
 	}
 
 	log.Println("Killing sekaid container with 15 code")
-	err = docker.KillContainerWithSigkill(context.Background(), cli, types.SEKAI_CONTAINER_ID, docker.SIGKILL)
+	err = docker.KillContainerWithSigkill(context.Background(), cli, types.SEKAI_CONTAINER_ID, docker.SIGTERM)
 	if err != nil {
 		log.Printf("ERROR: %v", err.Error())
 
