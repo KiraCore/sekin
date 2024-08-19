@@ -1,10 +1,13 @@
 package api
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kiracore/sekin/src/shidai/internal/commands"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
+	"github.com/kiracore/sekin/src/shidai/internal/update"
 	"go.uber.org/zap"
 )
 
@@ -24,8 +27,10 @@ func Serve() {
 	router.GET("/status", infraStatus())
 	router.GET("/dashboard", getDashboardHandler())
 
-	go backgroundUpdate()
+	updateContext := context.Background()
 
+	go backgroundUpdate()
+	go update.UpdateRunner(updateContext)
 	if err := router.Run(":8282"); err != nil {
 		log.Error("Failed to start the server", zap.Error(err))
 	}
