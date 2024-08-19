@@ -62,7 +62,7 @@ func interxPlanIsValid(currentVersions *types.SekinPackagesVersion, plan *interx
 		return false, err
 	}
 
-	if plan.Plan.Resources[0].ID != SEKAI_ID_RESOURCE {
+	if plan.Plan.Resources[0].ID != INTERX_ID_RESOURCE {
 		log.Debug("cant recognize upgrade plan resource ID", zap.String("plan resource id", plan.Plan.Resources[0].ID), zap.String("expected", INTERX_ID_RESOURCE))
 		return false, nil
 	}
