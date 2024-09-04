@@ -280,8 +280,8 @@ const (
 
 	InvalidOrMissingTx = "invalid or missing tx"
 
-	PlanIsEmptyOrNil = " plan is empty or nil"
-
+	PlanIsEmptyOrNil    = "plan is empty or nil"
+	InvalidRequest      = "invalid request"
 	ResourcePlanIsEmpty = "resources in upgrade plan empty"
 
 	FilePermRO os.FileMode = 0444
@@ -310,6 +310,7 @@ var (
 	ErrMultiplePublicIPAddresses = errors.New(MultiplePublicIPAddresses)
 
 	ErrPlanIsEmptyOrNil = errors.New(PlanIsEmptyOrNil)
+	ErrInvalidRequest   = errors.New(InvalidRequest)
 
 	SekaiFiles = InfraFiles{
 		"config.toml":        "/sekai/config/config.toml",

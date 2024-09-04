@@ -7,6 +7,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
+	"github.com/kiracore/sekin/src/shidai/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -56,4 +57,25 @@ func GetConfigToml(sekaiHome string) (*types.Config, error) {
 	}
 
 	return &cfgToml, nil
+}
+
+func SetAppToml(cfg types.AppConfig, sekaiHome string) error {
+	appTomlPath := filepath.Join(sekaiHome, "config", "app.toml")
+
+	err := utils.SaveAppConfig(appTomlPath, cfg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SetConfigToml(cfg types.Config, sekaiHome string) error {
+	configTomlPath := filepath.Join(sekaiHome, "config", "config.toml")
+
+	err := utils.SaveConfig(configTomlPath, cfg)
+	if err != nil {
+		return err
+	}
+	return nil
 }
