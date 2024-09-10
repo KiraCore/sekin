@@ -292,6 +292,9 @@ const (
 	DirPermWR os.FileMode = 0755
 
 	SEKIN_LATEST_COMPOSE_URL = "https://raw.githubusercontent.com/KiraCore/sekin/main/compose.yml"
+
+	SIGKILL string = "SIGKILL" // 9 - interx
+	SIGTERM string = "SIGTERM" // 15 - sekai
 )
 
 var (

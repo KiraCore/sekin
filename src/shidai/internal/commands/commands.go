@@ -45,6 +45,7 @@ var (
 		"start":  handleStartComamnd,
 		"tx":     handleTxCommand,
 		"sekaid": handleSekaidCommand,
+		"stop":   handleStopCommand,
 	}
 )
 
@@ -259,4 +260,23 @@ func handleStartComamnd(args map[string]interface{}) (string, error) {
 		return "", err
 	}
 	return "Sekai and Interx started successfully", nil
+}
+
+func handleStopCommand(args map[string]interface{}) (string, error) {
+	cm, err := docker.NewContainerManager()
+	if err != nil {
+		return "", err
+	}
+	ctx := context.Background()
+
+	err = cm.KillContainerWithSigkill(ctx, types.SEKAI_CONTAINER_ID, types.SIGTERM)
+	if err != nil {
+		return "", err
+	}
+	err = cm.KillContainerWithSigkill(ctx, types.INTERX_CONTAINER_ID, types.SIGKILL)
+	if err != nil {
+		return "", err
+	}
+
+	return "Sekai and Interx stoped seccessfully", nil
 }
