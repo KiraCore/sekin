@@ -69,3 +69,13 @@ func (cm *ContainerManager) ExecInContainer(ctx context.Context, containerID str
 	log.Info("Command executed successfully", zap.String("output", string(output)))
 	return output, nil
 }
+
+func (cm *ContainerManager) KillContainerWithSigkill(ctx context.Context, containerID, signal string) error {
+	log.Debug("Killing container", zap.String("container id", containerID), zap.String("kill signal", signal))
+
+	err := cm.Cli.ContainerKill(ctx, containerID, signal)
+	if err != nil {
+		return err
+	}
+	return nil
+}
