@@ -269,13 +269,26 @@ func handleStopCommand(args map[string]interface{}) (string, error) {
 	}
 	ctx := context.Background()
 
-	err = cm.KillContainerWithSigkill(ctx, types.SEKAI_CONTAINER_ID, types.SIGTERM)
+	running, err := cm.ContainerIsRunning(ctx, types.SEKAI_CONTAINER_ID)
 	if err != nil {
 		return "", err
 	}
-	err = cm.KillContainerWithSigkill(ctx, types.INTERX_CONTAINER_ID, types.SIGKILL)
+	if running {
+		sekaiErr := cm.KillContainerWithSigkill(ctx, types.SEKAI_CONTAINER_ID, types.SIGTERM)
+		if sekaiErr != nil {
+			return "", err
+		}
+	}
+
+	running, err = cm.ContainerIsRunning(ctx, types.INTERX_CONTAINER_ID)
 	if err != nil {
 		return "", err
+	}
+	if running {
+		interxErr := cm.KillContainerWithSigkill(ctx, types.INTERX_CONTAINER_ID, types.SIGKILL)
+		if interxErr != nil {
+			return "", err
+		}
 	}
 
 	return "Sekai and Interx stoped seccessfully", nil
