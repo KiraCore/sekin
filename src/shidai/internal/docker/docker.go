@@ -92,5 +92,16 @@ func (cm *ContainerManager) ContainerIsRunning(ctx context.Context, containerNam
 			}
 		}
 	}
+
 	return false, nil
+}
+
+func (cm *ContainerManager) ContainerIsStopped(ctx context.Context, containerID string) (bool, error) {
+	containerJSON, err := cm.Cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return false, err // Handle the error, it might be that the container does not exist
+	}
+	log.Debug("checking if container is stopped", zap.String("container name", containerID), zap.String("container status", containerJSON.State.Status))
+	// The State.Status will tell if the container is "exited", "running", etc.
+	return containerJSON.State.Status == "exited", nil
 }
