@@ -79,3 +79,18 @@ func (cm *ContainerManager) KillContainerWithSigkill(ctx context.Context, contai
 	}
 	return nil
 }
+
+func (cm *ContainerManager) ContainerIsRunning(ctx context.Context, containerName string) (bool, error) {
+	containers, err := cm.Cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		return false, err
+	}
+	for _, container := range containers {
+		for _, name := range container.Names {
+			if name == "/"+containerName && container.State == "running" {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
