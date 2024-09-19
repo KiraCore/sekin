@@ -1,6 +1,11 @@
 package main
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"context"
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 // static value
 var (
@@ -61,7 +66,7 @@ var (
 	)
 )
 
-// floating values
+// dynamic values
 var (
 	currentCPUGHz = prometheus.NewGauge(
 		prometheus.GaugeOpts{
@@ -70,3 +75,46 @@ var (
 		},
 	)
 )
+
+// run this in anonym func
+func RunPrometheusExporterService(ctx context.Context) error {
+	registerMetrics()
+
+	err := staticValueGetter()
+	if err != nil {
+		return nil
+	}
+
+	updatePeriod := time.Second * 4
+
+	ticker := time.NewTicker(updatePeriod)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			err = dynamicValueGetter()
+			return err
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func registerMetrics() {
+	prometheus.MustRegister(totalCPUCores)
+	prometheus.MustRegister(totalRAM)
+	prometheus.MustRegister(totalDiskSpace)
+	prometheus.MustRegister(totalBandwidth)
+	prometheus.MustRegister(totalGPUCUDACores)
+	prometheus.MustRegister(totalVRAM)
+	prometheus.MustRegister(totalCPUGHz)
+	prometheus.MustRegister(currentCPUGHz)
+}
+
+func staticValueGetter() error {
+	return nil
+}
+func dynamicValueGetter() error {
+	return nil
+}
