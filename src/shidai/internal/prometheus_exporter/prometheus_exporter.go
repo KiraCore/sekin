@@ -1,4 +1,4 @@
-package main
+package prometheusexporter
 
 import (
 	"context"
@@ -78,7 +78,6 @@ var (
 
 // run this in anonym func
 func RunPrometheusExporterService(ctx context.Context) error {
-	registerMetrics()
 
 	err := staticValueGetter()
 	if err != nil {
@@ -94,22 +93,26 @@ func RunPrometheusExporterService(ctx context.Context) error {
 		select {
 		case <-ticker.C:
 			err = dynamicValueGetter()
-			return err
+			if err != nil {
+				return err
+			}
 		case <-ctx.Done():
 			return nil
 		}
 	}
 }
 
-func registerMetrics() {
-	prometheus.MustRegister(totalCPUCores)
-	prometheus.MustRegister(totalRAM)
-	prometheus.MustRegister(totalDiskSpace)
-	prometheus.MustRegister(totalBandwidth)
-	prometheus.MustRegister(totalGPUCUDACores)
-	prometheus.MustRegister(totalVRAM)
-	prometheus.MustRegister(totalCPUGHz)
-	prometheus.MustRegister(currentCPUGHz)
+func RegisterMetrics() *prometheus.Registry {
+	var customRegistry = prometheus.NewRegistry()
+	customRegistry.MustRegister(
+		totalCPUCores,
+		totalRAM,
+		totalDiskSpace,
+		totalBandwidth,
+		totalVRAM,
+		totalCPUGHz,
+		currentCPUGHz)
+	return customRegistry
 }
 
 func staticValueGetter() error {
