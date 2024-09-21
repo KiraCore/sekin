@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	valuecollector "github.com/kiracore/sekin/src/shidai/internal/prometheus_exporter/value_collector"
+	systeminfo "github.com/kiracore/sekin/src/shidai/internal/utils/system_info"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -118,7 +118,8 @@ func RegisterMetrics() *prometheus.Registry {
 
 func staticValueGetter() error {
 	// set total ghz
-	totalGhz, err := valuecollector.Get_TotalGhz()
+
+	totalGhz, err := systeminfo.GetTotalCPUGHz()
 	if err != nil {
 		return err
 	}
