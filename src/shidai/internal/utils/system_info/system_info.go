@@ -4,6 +4,8 @@ import (
 	"runtime"
 
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/mem"
 )
 
 // GetTotalCPUGHz returns the total CPU GHz available (sum of max frequencies of all cores).
@@ -23,47 +25,45 @@ func GetTotalCPUGHz() (float64, error) {
 
 func GetTotalCPUCores() float64 {
 	return float64(runtime.NumCPU())
-	// You could also use a more precise system-specific package if needed.
 }
 
 // GetTotalRAM returns the total amount of RAM available in bytes.
-func GetTotalRAM() float64 {
-	// Implement logic to fetch total RAM, e.g., using syscall, /proc/meminfo, or libraries like "github.com/shirou/gopsutil/mem"
-	// Example placeholder value:
-	return float64(16 * 1024 * 1024 * 1024) // 16GB in bytes
+func GetTotalRAM() (float64, error) {
+	v, err := mem.VirtualMemory()
+	if err != nil {
+		return 0, err
+	}
+	return float64(v.Total), nil
 }
 
 // GetTotalDiskSpace returns the total disk space available in bytes.
-func GetTotalDiskSpace() float64 {
-	// Implement logic to fetch total disk space
-	// Placeholder value:
-	return float64(500 * 1024 * 1024 * 1024) // 500GB in bytes
+func GetTotalDiskSpace() (float64, error) {
+	partitions, err := disk.Partitions(false)
+	if err != nil {
+		return 0, err
+	}
+	var total uint64 = 0
+	for _, p := range partitions {
+		usage, _ := disk.Usage(p.Mountpoint)
+		total += usage.Total
+	}
+	return float64(total), nil
 }
 
 // GetTotalBandwidth returns the total available bandwidth in bits per second.
-func GetTotalBandwidth() float64 {
-	// Implement logic to fetch total bandwidth
-	// Placeholder value:
-	return float64(1000000000) // 1Gbps
+func GetTotalBandwidth() (float64, error) {
+	// TODO: need more advanced logic for this, need reconsider if we need this
+	return 0, nil
 }
 
 // GetTotalGPUCUDACores returns the total number of GPU CUDA cores available.
-func GetTotalGPUCUDACores() float64 {
-	// Implement logic to fetch total CUDA cores from the GPU.
-	// Placeholder value:
-	return float64(3584) // Example value for a GPU with 3584 CUDA cores
+func GetTotalGPUCUDACores() (float64, error) {
+	// TODO: need to check each case for each gpu manufactures
+	return 0, nil
 }
 
 // GetTotalVRAM returns the total VRAM available in bytes.
-func GetTotalVRAM() float64 {
-	// Implement logic to fetch total VRAM.
-	// Placeholder value:
-	return float64(8 * 1024 * 1024 * 1024) // 8GB in bytes
-}
-
-// GetCurrentCPUGHz returns the current CPU GHz in use (sum of current frequencies of all cores).
-func GetCurrentCPUGHz() float64 {
-	// Implement logic to fetch current CPU usage/frequency.
-	// Placeholder value:
-	return 2.8 // Example current GHz value
+func GetTotalVRAM() (float64, error) {
+	// TODO: need to check each case for each gpu manufactures
+	return 0, nil
 }
