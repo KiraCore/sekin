@@ -4,9 +4,12 @@ import (
 	"context"
 	"time"
 
-	systeminfo "github.com/kiracore/sekin/src/shidai/internal/utils/system_info"
+	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
 )
+
+var log = logger.GetLogger()
 
 // static value
 var (
@@ -67,38 +70,19 @@ var (
 	)
 )
 
-// dynamic values
-var (
-	currentCPUGHz = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "cpu_current_ghz",
-			Help: "Current CPU GHz in use (sum of current frequencies of all cores).",
-		},
-	)
-)
-
 // run this in anonym func
-func RunPrometheusExporterService(ctx context.Context) error {
-
-	err := staticValueGetter()
-	if err != nil {
-		return nil
-	}
-
+func RunPrometheusExporterService(ctx context.Context) {
+	staticValueUpdater()
 	updatePeriod := time.Second * 4
-
 	ticker := time.NewTicker(updatePeriod)
 	defer ticker.Stop()
-
 	for {
 		select {
 		case <-ticker.C:
-			err = dynamicValueGetter()
-			if err != nil {
-				return err
-			}
+			dynamicValueGetter()
+
 		case <-ctx.Done():
-			return nil
+			return
 		}
 	}
 }
@@ -112,21 +96,33 @@ func RegisterMetrics() *prometheus.Registry {
 		totalBandwidth,
 		totalVRAM,
 		totalCPUGHz,
-		currentCPUGHz)
+	)
 	return customRegistry
 }
 
-func staticValueGetter() error {
-	// set total ghz
-
-	totalGhz, err := systeminfo.GetTotalCPUGHz()
-	if err != nil {
-		return err
+func staticValueUpdater() {
+	if err := collectTotalCPUCores(); err != nil {
+		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
 	}
-	totalCPUGHz.Set(totalGhz)
-
-	return nil
+	if err := collectTotalBandwidth(); err != nil {
+		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
+	}
+	if err := collectTotalCPUGHz(); err != nil {
+		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
+	}
+	if err := collectTotalVRAM(); err != nil {
+		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
+	}
+	if err := collectTotalRAM(); err != nil {
+		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
+	}
+	if err := collectTotalGPUCUDACores(); err != nil {
+		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
+	}
+	if err := collectTotalDiskSpace(); err != nil {
+		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
+	}
 }
-func dynamicValueGetter() error {
-	return nil
+func dynamicValueGetter() {
+
 }
