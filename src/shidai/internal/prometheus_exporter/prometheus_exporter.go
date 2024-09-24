@@ -37,11 +37,16 @@ var (
 		},
 	)
 
-	// Total bandwidth
-	totalBandwidth = prometheus.NewGauge(
+	uploadBandwidth = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "bandwidth_total",
-			Help: "Total available bandwidth (in bits per second).",
+			Name: "bandwidth_upload",
+			Help: "Upload bandwidth (in bits per second).",
+		},
+	)
+	downloadBandwidth = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "bandwidth_download",
+			Help: "Download bandwidth (in bits per second).",
 		},
 	)
 
@@ -93,7 +98,8 @@ func RegisterMetrics() *prometheus.Registry {
 		totalCPUCores,
 		totalRAM,
 		totalDiskSpace,
-		totalBandwidth,
+		uploadBandwidth,
+		downloadBandwidth,
 		totalVRAM,
 		totalCPUGHz,
 	)

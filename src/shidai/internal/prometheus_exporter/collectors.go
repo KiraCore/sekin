@@ -29,12 +29,12 @@ func collectTotalDiskSpace() error {
 }
 
 func collectTotalBandwidth() error {
-	// TODO: need more advanced logic
-	bandwidth, err := systeminfo.GetTotalBandwidth()
+	downloadSpeed, uploadSpeed, err := systeminfo.GetTotalBandwidth()
 	if err != nil {
 		return err
 	}
-	totalBandwidth.Set(bandwidth)
+	downloadBandwidth.Set(downloadSpeed)
+	uploadBandwidth.Set(uploadSpeed)
 	return nil
 }
 
