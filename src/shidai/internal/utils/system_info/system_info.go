@@ -3,10 +3,15 @@ package systeminfo
 import (
 	"runtime"
 
+	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/showwin/speedtest-go/speedtest"
+	"go.uber.org/zap"
 )
+
+var log = logger.GetLogger()
 
 // GetTotalCPUGHz returns the total CPU GHz available (sum of max frequencies of all cores).
 func GetTotalCPUGHz() (float64, error) {
@@ -51,9 +56,46 @@ func GetTotalDiskSpace() (float64, error) {
 }
 
 // GetTotalBandwidth returns the total available bandwidth in bits per second.
-func GetTotalBandwidth() (float64, error) {
-	// TODO: need more advanced logic for this, need reconsider if we need this
-	return 0, nil
+//
+// returns bytes per second
+//
+//	return download, upload, error
+func GetTotalBandwidth() (float64, float64, error) {
+	log.Debug("Testing internet bandwidth.")
+	var speedtestClient = speedtest.New()
+	serverList, err := speedtestClient.FetchServers()
+	if err != nil {
+		log.Debug("error when fetching servers", zap.Error(err))
+		return 0, 0, err
+	}
+	targets, err := serverList.FindServer([]int{})
+	if err != nil {
+		log.Debug("error when finding servers", zap.Error(err))
+		return 0, 0, err
+	}
+
+	var uploadSpeed, downloadSpeed float64
+	for _, s := range targets {
+		// Please make sure your host can access this test server,
+		// otherwise you will get an error.
+		// It is recommended to replace a server at this time
+		err = s.DownloadTest()
+		if err != nil {
+			log.Debug("error when testing download speed", zap.Error(err))
+			return 0, 0, err
+		}
+		err = s.UploadTest()
+		if err != nil {
+			log.Debug("error when testing upload speed", zap.Error(err))
+			return 0, 0, err
+		}
+		log.Debug("speed test", zap.Any("server", s), zap.Float64("DownloadTest", float64(s.DLSpeed)), zap.Float64("UploadTest", float64(s.ULSpeed)))
+		uploadSpeed = float64(s.ULSpeed)
+		downloadSpeed = float64(s.DLSpeed)
+		// Note: The unit of s.DLSpeed, s.ULSpeed is bytes per second, this is a float64.
+		s.Context.Reset() // reset counter
+	}
+	return downloadSpeed, uploadSpeed, nil
 }
 
 // GetTotalGPUCUDACores returns the total number of GPU CUDA cores available.
