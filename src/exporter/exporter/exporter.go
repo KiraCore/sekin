@@ -1,10 +1,10 @@
-package prometheusexporter
+package exporter
 
 import (
 	"context"
 	"time"
 
-	"github.com/kiracore/sekin/src/shidai/internal/logger"
+	"github.com/kiracore/sekin/src/exporter/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
@@ -102,6 +102,7 @@ func RegisterMetrics() *prometheus.Registry {
 		downloadBandwidth,
 		totalVRAM,
 		totalCPUGHz,
+		totalGPUCUDACores,
 	)
 	return customRegistry
 }

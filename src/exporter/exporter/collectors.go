@@ -1,7 +1,7 @@
-package prometheusexporter
+package exporter
 
 import (
-	systeminfo "github.com/kiracore/sekin/src/shidai/internal/utils/system_info"
+	systeminfo "github.com/kiracore/sekin/src/exporter/system_info"
 )
 
 func collectTotalCPUCores() error {
