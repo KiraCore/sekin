@@ -1,9 +1,16 @@
 package systeminfo
 
 import (
+	"os"
+	"path/filepath"
 	"runtime"
+	"strconv"
+	"strings"
 
+	"github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/kiracore/sekin/src/exporter/logger"
+	"github.com/kiracore/sekin/src/exporter/types"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"
@@ -108,4 +115,27 @@ func GetTotalGPUCUDACores() (float64, error) {
 func GetTotalVRAM() (float64, error) {
 	// TODO: need to check each case for each gpu manufactures
 	return 0, nil
+}
+
+func GetAmdGpuVram(gpuAddress string) (float64, error) {
+	gpuPath := filepath.Join(types.DEVICES_BASE_PATH, gpuAddress)
+	vramPath := filepath.Join(gpuPath, types.AMO_VRAM_FILE_NAME)
+	vramContent, err := os.ReadFile(vramPath)
+	if err != nil {
+		return 0, err
+	}
+	vram, err := strconv.ParseFloat(strings.Replace(string(vramContent), "\n", "", -1), 64)
+	if err != nil {
+		return 0, err
+	}
+	return vram, nil
+}
+
+// Collects all available gpus info on the system
+func CollectGpusInfo() ([]*gpu.GraphicsCard, error) {
+	gpu, err := ghw.GPU()
+	if err != nil {
+		return nil, err
+	}
+	return gpu.GraphicsCards, nil
 }

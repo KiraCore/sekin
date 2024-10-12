@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"github.com/jaypipes/ghw/pkg/gpu"
 	systeminfo "github.com/kiracore/sekin/src/exporter/system_info"
 )
 
@@ -45,4 +46,8 @@ func collectTotalCPUGHz() error {
 	}
 	totalCPUGHz.Set(totalGhz)
 	return nil
+}
+
+func get_amd_gpu_vram(gpuInfo *gpu.GraphicsCard) (float64, error) {
+	return systeminfo.GetAmdGpuVram(gpuInfo.Address)
 }
