@@ -38,24 +38,6 @@ func collectTotalBandwidth() error {
 	return nil
 }
 
-func collectTotalGPUCUDACores() error {
-	cudaCores, err := systeminfo.GetTotalGPUCUDACores()
-	if err != nil {
-		return err
-	}
-	totalGPUCUDACores.Set(cudaCores)
-	return nil
-}
-
-func collectTotalVRAM() error {
-	vram, err := systeminfo.GetTotalVRAM()
-	if err != nil {
-		return err
-	}
-	totalVRAM.Set(vram)
-	return nil
-}
-
 func collectTotalCPUGHz() error {
 	totalGhz, err := systeminfo.GetTotalCPUGHz()
 	if err != nil {

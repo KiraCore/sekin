@@ -50,22 +50,6 @@ var (
 		},
 	)
 
-	// Total GPU CUDA cores
-	totalGPUCUDACores = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "gpu_total_cuda_cores",
-			Help: "Total number of GPU CUDA cores available.",
-		},
-	)
-
-	// Total VRAM
-	totalVRAM = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "gpu_total_vram",
-			Help: "Total VRAM available (in bytes).",
-		},
-	)
-
 	// Total CPU GHz
 	totalCPUGHz = prometheus.NewGauge(
 		prometheus.GaugeOpts{
@@ -100,9 +84,7 @@ func RegisterMetrics() *prometheus.Registry {
 		totalDiskSpace,
 		uploadBandwidth,
 		downloadBandwidth,
-		totalVRAM,
 		totalCPUGHz,
-		totalGPUCUDACores,
 	)
 	return customRegistry
 }
@@ -117,15 +99,11 @@ func staticValueUpdater() {
 	if err := collectTotalCPUGHz(); err != nil {
 		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
 	}
-	if err := collectTotalVRAM(); err != nil {
-		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
-	}
+
 	if err := collectTotalRAM(); err != nil {
 		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
 	}
-	if err := collectTotalGPUCUDACores(); err != nil {
-		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
-	}
+
 	if err := collectTotalDiskSpace(); err != nil {
 		log.Warn("unable to collect total value of cpu cores", zap.Error(err))
 	}
