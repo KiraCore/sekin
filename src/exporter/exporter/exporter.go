@@ -160,16 +160,7 @@ func create_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.GaugeV
 	}
 }
 func create_amd_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.GaugeVec, error) {
-	gauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: fmt.Sprintf("gpu_%v", gpuNum),
-		Help: fmt.Sprintf("Device info for %v Model id: \"%v\"", gpuInfo.DeviceInfo.Product.Name, gpuInfo.DeviceInfo.Product.ID),
-	}, []string{"property"})
-
-	err := prometheus.Register(gauge)
-	if err != nil {
-		return nil, fmt.Errorf("error registering gpu gauge: %v", err)
-	}
-
+	gauge := get_gpu_gauge_layout(gpuNum, gpuInfo)
 	vram, err := get_amd_gpu_vram(gpuInfo)
 	if err != nil {
 		return nil, fmt.Errorf("error getting GPU VRAM: %v", err)
@@ -179,8 +170,23 @@ func create_amd_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.Ga
 	return gauge, nil
 }
 func create_nvidia_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.GaugeVec, error) {
-	return nil, nil
+	gauge := get_gpu_gauge_layout(gpuNum, gpuInfo)
+	//TODO: implement vram getter for nvidia gpu, tmp set to 0 to get some value and basic info for gpu
+	gauge.With(prometheus.Labels{"property": "vram"}).Set(float64(0))
+
+	return gauge, nil
 }
 func create_intel_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.GaugeVec, error) {
-	return nil, nil
+	gauge := get_gpu_gauge_layout(gpuNum, gpuInfo)
+	//TODO: implement vram getter for intel gpu, tmp set to 0 to get some value and basic info for gpu
+	gauge.With(prometheus.Labels{"property": "vram"}).Set(float64(0))
+	return gauge, nil
+}
+
+func get_gpu_gauge_layout(gpuNum int, gpuInfo *gpu.GraphicsCard) *prometheus.GaugeVec {
+	gauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: fmt.Sprintf("gpu_%v", gpuNum),
+		Help: fmt.Sprintf("Device info for %v Model id: \"%v\"", gpuInfo.DeviceInfo.Product.Name, gpuInfo.DeviceInfo.Product.ID),
+	}, []string{"property"})
+	return gauge
 }
