@@ -139,3 +139,11 @@ func CollectGpusInfo() ([]*gpu.GraphicsCard, error) {
 	}
 	return gpu.GraphicsCards, nil
 }
+
+func GetNvidiaGpuVram(gpuAddress string) (float64, error) {
+	return 0, nil
+}
+
+func GetNvidiaCudaCores(gpuAddress string) (float64, error) {
+	return 0, nil
+}

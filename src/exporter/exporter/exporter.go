@@ -171,8 +171,14 @@ func create_amd_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.Ga
 }
 func create_nvidia_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.GaugeVec, error) {
 	gauge := get_gpu_gauge_layout(gpuNum, gpuInfo)
-	//TODO: implement vram getter for nvidia gpu, tmp set to 0 to get some value and basic info for gpu
-	gauge.With(prometheus.Labels{"property": "vram"}).Set(float64(0))
+	vram, err := get_nvidia_gpu_vram(gpuInfo)
+	if err != nil {
+		return nil, fmt.Errorf("error getting GPU VRAM: %v", err)
+	}
+	gauge.With(prometheus.Labels{"property": "vram"}).Set(float64(vram))
+
+	cudaCores, err := get_nvidia_cuda_cores(gpuInfo)
+	gauge.With(prometheus.Labels{"property": "cuda_cores"}).Set(float64(cudaCores))
 
 	return gauge, nil
 }

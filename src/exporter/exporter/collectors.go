@@ -51,3 +51,11 @@ func collectTotalCPUGHz() error {
 func get_amd_gpu_vram(gpuInfo *gpu.GraphicsCard) (float64, error) {
 	return systeminfo.GetAmdGpuVram(gpuInfo.Address)
 }
+
+func get_nvidia_gpu_vram(gpuInfo *gpu.GraphicsCard) (float64, error) {
+	return systeminfo.GetNvidiaGpuVram(gpuInfo.Address)
+}
+
+func get_nvidia_cuda_cores(gpuInfo *gpu.GraphicsCard) (float64, error) {
+	return systeminfo.GetNvidiaCudaCores(gpuInfo.Address)
+}
