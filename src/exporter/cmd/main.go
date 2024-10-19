@@ -2,35 +2,81 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/kiracore/sekin/src/exporter/exporter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/time/rate"
 )
 
-func main() {
-	// Create a context that can be cancelled to stop the Prometheus exporter service gracefully
+var (
+	ipRateLimit = make(map[string]*rate.Limiter)
+	mu          sync.Mutex
+)
 
-	// Register the metrics with Prometheus
+func getLimiter(ip string) *rate.Limiter {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if _, exists := ipRateLimit[ip]; !exists {
+		ipRateLimit[ip] = rate.NewLimiter(rate.Every(1*time.Second), 1)
+	}
+	return ipRateLimit[ip]
+}
+
+func dropConnection(w http.ResponseWriter) {
+	hijacker, ok := w.(http.Hijacker)
+	if !ok {
+		http.Error(w, "Server doesn't support connection hijacking", http.StatusInternalServerError)
+		return
+	}
+
+	conn, _, err := hijacker.Hijack()
+	if err != nil {
+		fmt.Println("Failed to hijack connection:", err)
+		return
+	}
+
+	conn.Close()
+}
+
+func limit(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			http.Error(w, "Invalid IP", http.StatusBadRequest)
+			return
+		}
+
+		limiter := getLimiter(ip)
+
+		if !limiter.Allow() {
+			dropConnection(w)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func main() {
 	registry := exporter.RegisterMetrics()
 
-	// Create an HTTP handler that serves metrics registered with the custom registry
-	http.Handle("/metrics", promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+	http.Handle("/metrics", limit(promhttp.HandlerFor(registry, promhttp.HandlerOpts{})))
 
-	// Start the Prometheus exporter service in a separate goroutine
 	go func() {
 		exporter.RunPrometheusExporterService(context.Background())
 	}()
 
-	// Start the HTTP server to expose the /metrics endpoint
 	server := &http.Server{
-		Addr: ":9333", // Change this to your preferred port if needed
+		Addr: ":9333",
 	}
 
-	// Start the HTTP server
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		// Handle error (other than graceful shutdown)
 		panic(err)
 	}
-
 }
