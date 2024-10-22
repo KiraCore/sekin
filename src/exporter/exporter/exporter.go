@@ -182,8 +182,9 @@ func create_nvidia_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus
 	}
 	gauge.With(prometheus.Labels{"property": "vram"}).Set(float64(vram))
 
-	cudaCores, err := get_nvidia_cuda_cores(gpuInfo)
-	gauge.With(prometheus.Labels{"property": "cuda_cores"}).Set(float64(cudaCores))
+	// deprecated for now, need to find a reliable method of retrieving the amount of cuda cores
+	// cudaCores, err := get_nvidia_cuda_cores(gpuInfo)
+	// gauge.With(prometheus.Labels{"property": "cuda_cores"}).Set(float64(cudaCores))
 
 	return gauge, nil
 }
