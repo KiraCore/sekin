@@ -3,11 +3,13 @@ package exporter
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/kiracore/sekin/src/exporter/logger"
 	systeminfo "github.com/kiracore/sekin/src/exporter/system_info"
+	"github.com/kiracore/sekin/src/exporter/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
@@ -144,20 +146,23 @@ func gatherGpusGauges(reg *prometheus.Registry) error {
 }
 
 func create_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.GaugeVec, error) {
-	vendor := gpuInfo.DeviceInfo.Vendor.ID
-
-	//for more info about vendor id use https://pci-ids.ucw.cz/
-	switch vendor {
-
-	case "1002": // amd vendor id
-		return create_amd_gpu_gauge(gpuNum, gpuInfo)
-	case "10DE": //nvidia vendor id
-		return create_nvidia_gpu_gauge(gpuNum, gpuInfo)
-	case "8086": // should be a intel controller, need to double check
-		return create_intel_gpu_gauge(gpuNum, gpuInfo)
-	default:
-		return nil, fmt.Errorf("unable to detect GPU device, device info: %+v, vendor ID: %s", gpuInfo.DeviceInfo, vendor)
+	if gpuInfo.DeviceInfo != nil {
+		vendor := gpuInfo.DeviceInfo.Vendor.ID
+		//for more info about vendor id use https://pci-ids.ucw.cz/
+		switch strings.ToLower(vendor) {
+		case strings.ToLower(types.VENDOR_AMD_GPU_ID): // amd vendor id
+			return create_amd_gpu_gauge(gpuNum, gpuInfo)
+		case strings.ToLower(types.VENDOR_NVIDIA_GPU_ID): //nvidia vendor id
+			return create_nvidia_gpu_gauge(gpuNum, gpuInfo)
+		case strings.ToLower(types.VENDOR_INTEL_GPU_ID): // should be a intel controller, need to double check
+			return create_intel_gpu_gauge(gpuNum, gpuInfo)
+		default:
+			return nil, fmt.Errorf("unable to detect GPU device, device info: %+v, vendor ID: %s", gpuInfo.DeviceInfo, vendor)
+		}
+	} else {
+		return nil, fmt.Errorf("Device info is nil")
 	}
+
 }
 func create_amd_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.GaugeVec, error) {
 	gauge := get_gpu_gauge_layout(gpuNum, gpuInfo)
