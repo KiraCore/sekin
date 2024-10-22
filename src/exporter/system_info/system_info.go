@@ -2,6 +2,7 @@ package systeminfo
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -140,8 +141,23 @@ func CollectGpusInfo() ([]*gpu.GraphicsCard, error) {
 	return gpu.GraphicsCards, nil
 }
 
+// utilizes nvidia-smi to retrieve vram
 func GetNvidiaGpuVram(gpuAddress string) (float64, error) {
-	return 0, nil
+	cmd := exec.Command("nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits")
+
+	// Run the command and capture both stdout and stderr
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return 0, err
+	}
+
+	// Trim and print the output (which includes both stdout and stderr)
+	result, err := strconv.Atoi(strings.TrimSpace(string(output)))
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(result), nil
 }
 
 func GetNvidiaCudaCores(gpuAddress string) (float64, error) {
