@@ -3,6 +3,7 @@ module github.com/kiracore/sekin/src/exporter
 go 1.22.2
 
 require (
+	github.com/NVIDIA/go-nvml v0.12.4-0
 	github.com/jaypipes/ghw v0.13.0
 	github.com/prometheus/client_golang v1.20.4
 	github.com/shirou/gopsutil v3.21.11+incompatible

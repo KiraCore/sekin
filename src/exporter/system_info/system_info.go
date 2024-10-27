@@ -1,13 +1,14 @@
 package systeminfo
 
 import (
+	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 
+	"github.com/NVIDIA/go-nvml/pkg/nvml"
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/gpu"
 	"github.com/kiracore/sekin/src/exporter/logger"
@@ -141,25 +142,46 @@ func CollectGpusInfo() ([]*gpu.GraphicsCard, error) {
 	return gpu.GraphicsCards, nil
 }
 
-// utilizes nvidia-smi to retrieve vram
-func GetNvidiaGpuVram(gpuAddress string) (float64, error) {
-	cmd := exec.Command("nvidia-smi", "--query-gpu=memory.total", "--format=csv,noheader,nounits")
-
-	// Run the command and capture both stdout and stderr
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return 0, err
+func GetNvidiaGpuVram(gpuAddress string) (vram float64, err error) {
+	ret := nvml.Init()
+	if ret != nvml.SUCCESS {
+		return 0, fmt.Errorf("unable to initialize NVML: %w", ret)
 	}
-
-	// Trim and print the output (which includes both stdout and stderr)
-	result, err := strconv.Atoi(strings.TrimSpace(string(output)))
-	if err != nil {
-		return 0, err
+	defer func() {
+		ret := nvml.Shutdown()
+		if ret != nvml.SUCCESS {
+			err = fmt.Errorf("unable to shutdown NVML: %w", ret)
+		}
+	}()
+	device, ret := nvml.DeviceGetHandleByPciBusId(gpuAddress)
+	if ret != nvml.SUCCESS {
+		return 0, ret
 	}
-
-	return float64(result), nil
+	memInfo, ret := device.GetMemoryInfo()
+	if ret != nvml.SUCCESS {
+		return 0, ret
+	}
+	return float64(memInfo.Total), nil
 }
 
-func GetNvidiaCudaCores(gpuAddress string) (float64, error) {
-	return 0, nil
+func GetNvidiaCudaCores(gpuAddress string) (cudaCores float64, err error) {
+	ret := nvml.Init()
+	if ret != nvml.SUCCESS {
+		return 0, fmt.Errorf("unable to initialize NVML: %w", ret)
+	}
+	defer func() {
+		ret := nvml.Shutdown()
+		if ret != nvml.SUCCESS {
+			err = fmt.Errorf("unable to shutdown NVML: %w", ret)
+		}
+	}()
+	device, ret := nvml.DeviceGetHandleByPciBusId(gpuAddress)
+	if ret != nvml.SUCCESS {
+		return 0, ret
+	}
+	cuda, ret := device.GetNumGpuCores()
+	if ret != nvml.SUCCESS {
+		return 0, ret
+	}
+	return float64(cuda), nil
 }
