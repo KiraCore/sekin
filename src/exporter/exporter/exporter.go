@@ -168,7 +168,8 @@ func create_amd_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus.Ga
 	gauge := get_gpu_gauge_layout(gpuNum, gpuInfo)
 	vram, err := get_amd_gpu_vram(gpuInfo)
 	if err != nil {
-		return nil, fmt.Errorf("error getting GPU VRAM: %v", err)
+		// return nil, fmt.Errorf("error getting GPU VRAM: %v", err)
+		log.Warn("error getting GPU VRAM", zap.Error(err))
 	}
 	gauge.With(prometheus.Labels{"property": "vram"}).Set(float64(vram))
 
@@ -178,13 +179,15 @@ func create_nvidia_gpu_gauge(gpuNum int, gpuInfo *gpu.GraphicsCard) (*prometheus
 	gauge := get_gpu_gauge_layout(gpuNum, gpuInfo)
 	vram, err := get_nvidia_gpu_vram(gpuInfo)
 	if err != nil {
-		return nil, fmt.Errorf("error getting GPU VRAM: %v", err)
+		// return nil, fmt.Errorf("error getting GPU VRAM: %v", err)
+		log.Warn("error getting GPU VRAM", zap.Error(err))
 	}
 	gauge.With(prometheus.Labels{"property": "vram"}).Set(float64(vram))
 
 	cudaCores, err := get_nvidia_cuda_cores(gpuInfo)
 	if err != nil {
-		return nil, fmt.Errorf("error getting cuda cores count : %v", err)
+		// return nil, fmt.Errorf("error getting cuda cores count: %v", err)
+		log.Warn("error getting cuda cores count", zap.Error(err))
 	}
 	gauge.With(prometheus.Labels{"property": "cuda_cores"}).Set(float64(cudaCores))
 
