@@ -25,7 +25,23 @@ func DockerComposeUpService(home, composeFilePath string, serviceName ...string)
 	cmdArgs = append(cmdArgs, serviceName...)
 
 	log.Printf("Trying to run <%v>", strings.Join(cmdArgs, " "))
-	cmd := exec.Command("docker-compose", cmdArgs...)
+
+	plugin, binary := CheckForDockerComposeInstallation()
+	var cmd *exec.Cmd
+
+	switch {
+	case binary:
+		cmd = exec.Command("docker-compose", cmdArgs...)
+	case plugin:
+		cmdArgs = append([]string{"compose"}, cmdArgs...)
+		cmd = exec.Command("docker", cmdArgs...)
+	case plugin && binary:
+		cmdArgs = append([]string{"compose"}, cmdArgs...)
+		cmd = exec.Command("docker", cmdArgs...)
+	default:
+		return fmt.Errorf("docker compose plugin/binary is not installed")
+	}
+	// cmd := exec.Command(composeBinary..., cmdArgs...)
 
 	if _, err := os.Stat(home); os.IsNotExist(err) {
 		return fmt.Errorf("home directory does not exist: %v", err)
@@ -41,6 +57,29 @@ func DockerComposeUpService(home, composeFilePath string, serviceName ...string)
 	}
 
 	return nil
+}
+
+func CheckForDockerComposeInstallation() (plugin, binary bool) {
+	cmdDockerCompose := exec.Command("docker", "compose", "version")
+	if output, err := cmdDockerCompose.CombinedOutput(); err == nil {
+		fmt.Println("docker compose is installed:\n", string(output))
+		plugin = true
+	} else {
+		plugin = false
+		fmt.Println("docker compose is not installed or not available in Docker CLI.")
+	}
+
+	cmdCompose := exec.Command("docker-compose", "version")
+	if output, err := cmdCompose.CombinedOutput(); err == nil {
+		fmt.Println("docker-compose is installed:\n", string(output))
+		binary = true
+	} else {
+		binary = false
+		fmt.Println("docker-compose is not installed or not in PATH.")
+	}
+
+	return plugin, binary
+
 }
 
 func ReadComposeYMLField(compose map[string]interface{}, serviceName, fieldName string) (string, error) {
