@@ -20,6 +20,8 @@ RUN go build -a -tags netgo -installsuffix cgo -ldflags="-X main.Version=${VERSI
 FROM scratch
 
 COPY --from=shidai-builder /shidai /shidai
+COPY --from=shidai-builder usr/share/ca-certificates usr/share/ca-certificates/
+COPY --from=shidai-builder /etc/ssl /etc/ssl/
 
 CMD ["/shidai", "start"]
 
