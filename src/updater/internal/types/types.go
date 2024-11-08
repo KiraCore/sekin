@@ -52,11 +52,11 @@ const SEKAI_CONTAINER_ID = "sekin-sekai-1"
 const UPDATE_PLAN string = "./upgrade_plan.json"
 
 const SEKIN_HOME string = "/home/km/sekin"
-const SEKAI_HOME string = "/home/km/sekin" + CONTAINERIZED_SEKAI_HOME
+const SEKAI_HOME string = SEKIN_HOME + CONTAINERIZED_SEKAI_HOME
 
 // TODO: FOR TESTING PURPOSES, DELETE AFTER
-// const SEKIN_HOME string = "/home/peepo/Projects/Go/KIRA/sekin"
-// const SEKAI_HOME string = "/home/peepo/Projects/Go/KIRA/sekin" + CONTAINERIZED_SEKAI_HOME
+// const SEKIN_HOME string = "/home/d/sekin"
+// const SEKAI_HOME string = SEKIN_HOME + CONTAINERIZED_SEKAI_HOME
 
 const CONTAINERIZED_SEKAI_HOME string = "/sekai"                               //from sekai container prospective
 const CONTAINERIZED_SEKAI_CONFIG string = CONTAINERIZED_SEKAI_HOME + "/config" //from sekai container prospective
