@@ -33,9 +33,9 @@ func UpdateRunner(ctx context.Context) {
 	hardforkStagedInterval := time.Minute * 20
 
 	// TODO: FOR TESTING PURPOSES, DELETE AFTER
-	// normalUpdateInterval := time.Minute * 1
-	// errorUpdateInterval := time.Minute * 1
-	// hardforkStagedInterval := time.Minute * 1
+	// normalUpdateInterval = time.Second * 20
+	// errorUpdateInterval = time.Second * 20
+	// hardforkStagedInterval = time.Second * 20
 
 	ticker := time.NewTicker(normalUpdateInterval)
 	defer ticker.Stop()
@@ -237,29 +237,6 @@ func writeUpgradePlanToFile(plan *interx.PlanData, path string) error {
 func executeUpdaterBin() error {
 	log.Debug("Executing update binary", zap.String("bin path", types.UPDATER_BIN_PATH))
 
-	// TODO: for testing, delete after
-	//
-	// folder := "/shidaid"
-	// Open the directory
-	// dir, err := os.Open(folder)
-	// if err != nil {
-	// 	log.Debug("Error opening directory:", zap.Error(err))
-	// }
-	// defer dir.Close()
-
-	// // Read the directory's contents
-	// files, err := dir.Readdir(-1)
-	// if err != nil {
-	// 	log.Debug("Error reading directory:", zap.Error(err))
-	// }
-
-	// // Iterate over the files and print their names
-	// for _, file := range files {
-	// 	if !file.IsDir() {
-	// 		// .Println("File:", file.Name())
-	// 		log.Debug("FILE:", zap.String(fmt.Sprintf("file from %s:", folder), file.Name()))
-	// 	}
-	// }
 	cmd := exec.Command(types.UPDATER_BIN_PATH)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
