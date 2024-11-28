@@ -45,6 +45,7 @@ var (
 		"status": handleStatusCommand,
 		"start":  handleStartComamnd,
 		"tx":     handleTxCommand,
+		"sekaid": handleSekaidCommand,
 	}
 )
 
@@ -70,6 +71,42 @@ func ExecuteCommandHandler(c *gin.Context) {
 }
 
 // [COMMANDS] //
+func handleSekaidCommand(args map[string]interface{}) (string, error) {
+	execInterface, ok := args["exec"].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("type assertion to []interface{} failed for args[\"exec\"]")
+	}
+
+	var cmd []string
+	for _, v := range execInterface {
+		str, ok := v.(string)
+		if !ok {
+			return "", fmt.Errorf("type assertion to string failed for element in exec")
+		}
+		cmd = append(cmd, str)
+	}
+
+	cm, err := docker.NewContainerManager()
+	if err != nil {
+		log.Error("Failed to initialize Docker API", zap.Error(err))
+		return "", fmt.Errorf("failed to initialize docker API: %w", err)
+	}
+
+	ctx := context.Background()
+	containerID := types.SEKAI_CONTAINER_ID
+
+	var out []byte = []byte{}
+	out, err = cm.ExecInContainer(ctx, containerID, cmd)
+	if err != nil {
+		log.Error("Failed to execute transaction command", zap.Strings("command", cmd), zap.Error(err))
+		return "", fmt.Errorf("failed to execute transaction command: %w", err)
+	}
+
+	log.Debug("Container output: ", zap.String("out", string(out)))
+	log.Info("Transaction command executed successfully", zap.Strings("command", cmd))
+	return string(out), nil
+
+}
 func handleTxCommand(args map[string]interface{}) (string, error) {
 	cmd, ok := args["tx"].(string)
 	if !ok {

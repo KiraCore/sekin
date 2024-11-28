@@ -13,6 +13,7 @@ services:
         tag: "sekai"
     volumes:
       - ./sekai:/sekai
+      - ./tmp:/tmp
     ports:
       - "26658:26658"           # ABCI
       - "26657:26657"           # RPC
@@ -61,6 +62,7 @@ services:
       - ./syslog-data:/syslog-data
       - /var/run/docker.sock:/var/run/docker.sock
       - ./shidai:/shidaid
+      - ./tmp:/tmp
     networks:
       kiranet:
         ipv4_address: 10.1.0.5

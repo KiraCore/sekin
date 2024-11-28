@@ -62,6 +62,7 @@ func (cm *ContainerManager) ExecInContainer(ctx context.Context, containerID str
 
 	if len(errBuf.Bytes()) > 0 {
 		log.Warn("Standard error output from container exec", zap.ByteString("stderr", errBuf.Bytes()))
+		return nil, fmt.Errorf(errBuf.String())
 	}
 
 	output := outBuf.Bytes()

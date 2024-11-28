@@ -3,7 +3,7 @@ services:
   sekai:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/sekai:v0.3.45
+    image: ghcr.io/kiracore/sekin/sekai:v0.4.1
     restart: always
     logging:
       driver: syslog
@@ -12,6 +12,7 @@ services:
         syslog-facility: local0
         tag: "sekai"
     volumes:
+      - ./tmp:/tmp
       - ./sekai:/sekai
     ports:
       - "26658:26658"           # ABCI
@@ -28,7 +29,7 @@ services:
   interx:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/interx:v0.4.48
+    image: ghcr.io/kiracore/sekin/interx:v0.4.49
     restart: always
     logging:
       driver: syslog
@@ -49,7 +50,7 @@ services:
   shidai:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/shidai:v0.8.14
+    image: ghcr.io/kiracore/sekin/shidai:v0.9.1
     restart: always
     ports:
       - "127.0.0.1:8282:8282"
@@ -59,13 +60,14 @@ services:
       - ./syslog-data:/syslog-data
       - /var/run/docker.sock:/var/run/docker.sock
       - ./shidai:/shidaid
+      - ./tmp:/tmp
     networks:
       kiranet:
         ipv4_address: 10.1.0.5
     hostname: shidai.local
 
   syslog-ng:
-    image: ghcr.io/kiracore/sekin/syslog-ng:v0.8.14
+    image: ghcr.io/kiracore/sekin/syslog-ng:v0.9.1
     restart: always
     healthcheck:
       test: ["CMD", "pgrep", "syslog-ng"]

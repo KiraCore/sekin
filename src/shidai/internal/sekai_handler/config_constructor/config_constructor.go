@@ -26,7 +26,7 @@ var (
 )
 
 const (
-	endpointPubP2PList string = "api/pub_p2p_list?peers_only=true"
+	endpointPubP2PList string = "api/pub_p2p_list?peers_only=true&unsafe=true"
 )
 
 type networkInfo struct {

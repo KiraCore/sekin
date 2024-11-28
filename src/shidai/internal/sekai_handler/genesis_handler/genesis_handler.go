@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	httpexecutor "github.com/kiracore/sekin/src/shidai/internal/http_executor"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
@@ -46,7 +47,7 @@ func GetVerifiedGenesisFile(ctx context.Context, ip, sekaidRPCPort, interxPort s
 	log.Debug("Retrieved genesis file from sekaid", zap.ByteString("genesisSekaid", genesisSekaid))
 
 	// Get genesis file from Interx daemon
-	genesisInterx, err := getInterxGenesis(ctx, ip, interxPort)
+	genesisInterx, err := GetInterxGenesis(ctx, ip, interxPort)
 	if err != nil {
 		log.Error("Failed to get genesis file from interx", zap.String("IP", ip), zap.String("Port", interxPort), zap.Error(err))
 		return nil, fmt.Errorf("failed to get interx genesis: %w", err)
@@ -127,9 +128,10 @@ func getSekaidGenesis(ctx context.Context, ipAddress, sekaidRPCport string) ([]b
 	return completeGenesis, nil
 }
 
-func getInterxGenesis(ctx context.Context, ipAddress, interxPort string) ([]byte, error) {
+func GetInterxGenesis(ctx context.Context, ipAddress, interxPort string) ([]byte, error) {
 	log.Info("Starting to get the Interx genesis", zap.String("IP", ipAddress), zap.String("port", interxPort))
-
+	ctx, cancel := context.WithTimeout(ctx, 40*time.Second)
+	defer cancel()
 	// Construct the URL for fetching the genesis data
 	url := fmt.Sprintf("http://%s:%s/api/genesis", ipAddress, interxPort)
 	log.Debug("Constructed URL for fetching Interx genesis", zap.String("url", url))
