@@ -71,14 +71,11 @@ func addrbookManager(ctx context.Context) {
 	ticker := time.NewTicker(30 * time.Minute)
 	defer ticker.Stop()
 	errorCooldown := time.Second * 1
-	for {
-		err := addrbookCopy()
-		if err != nil {
-			log.Debug("Error when replacing interx addrbook with sekai addrbook, sleeping", zap.Duration("errorCooldown", errorCooldown))
-			time.Sleep(errorCooldown)
-		} else {
-			break
-		}
+
+	err := addrbookCopy()
+	if err != nil {
+		log.Debug("Error when replacing interx addrbook with sekai addrbook, sleeping", zap.Duration("errorCooldown", errorCooldown))
+		time.Sleep(errorCooldown)
 	}
 	for {
 		select {
