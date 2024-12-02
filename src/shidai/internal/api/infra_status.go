@@ -32,8 +32,10 @@ func infraStatus() gin.HandlerFunc {
 			return
 		}
 		if SyslogVersion, err = cm.ExecInContainer(ctx, "sekin-syslog-ng-1", []string{"syslog-ng", "--version"}); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get Syslog version"})
-			return
+			// c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get Syslog version"})
+			// return
+			// syslog version is not used anywhere in code, but sometimes returns error instead of version which causes problems with ui not logic
+			SyslogVersion = []byte(err.Error())
 		}
 
 		if ShidaiVersion, err = cm.ExecInContainer(ctx, "sekin-shidai-1", []string{"/shidai", "version"}); err != nil {
