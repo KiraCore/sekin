@@ -250,6 +250,10 @@ const (
 	DEFAULT_RPC_PORT    int    = 26657
 	DEFAULT_GRPC_PORT   int    = 9090
 
+	SEKAI_CONFIG_FOLDER  string = SEKAI_HOME + "/config"
+	INTERX_ADDRBOOK_PATH string = INTERX_HOME + "/addrbook.json"
+	SEKAI_ADDRBOOK_PATH  string = SEKAI_CONFIG_FOLDER + "/addrbook.json"
+
 	SEKAI_CONTAINER_ADDRESS  string = "sekai.local"
 	INTERX_CONTAINER_ADDRESS string = "interx.local"
 
