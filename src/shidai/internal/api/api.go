@@ -26,11 +26,14 @@ func Serve() {
 	router.GET("/logs/interx", streamLogs(types.InterxLogPath))
 	router.GET("/status", infraStatus())
 	router.GET("/dashboard", getDashboardHandler())
+	router.POST("/config", getCurrentConfigs())
+	router.PUT("/config", setConfig())
 
 	updateContext := context.Background()
 
 	go backgroundUpdate()
 	go update.UpdateRunner(updateContext)
+
 	if err := router.Run(":8282"); err != nil {
 		log.Error("Failed to start the server", zap.Error(err))
 	}

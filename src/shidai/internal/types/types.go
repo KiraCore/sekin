@@ -122,7 +122,7 @@ type (
 		DiscoveryTime       string `toml:"discovery_time"`
 		TempDir             string `toml:"temp_dir"`
 		ChunkRequestTimeout string `toml:"chunk_request_timeout"`
-		ChunkFetchers       int    `toml:"chunk_fetchers"`
+		ChunkFetchers       string `toml:"chunk_fetchers"`
 	}
 
 	FastSyncConfig struct {
@@ -165,9 +165,9 @@ type (
 	AppConfig struct {
 		MinimumGasPrices    string             `toml:"minimum-gas-prices"`
 		Pruning             string             `toml:"pruning"`
-		PruningKeepRecent   int                `toml:"pruning-keep-recent"`
-		PruningKeepEvery    int                `toml:"pruning-keep-every"`
-		PruningInterval     int                `toml:"pruning-interval"`
+		PruningKeepRecent   string             `toml:"pruning-keep-recent"`
+		PruningKeepEvery    string             `toml:"pruning-keep-every"`
+		PruningInterval     string             `toml:"pruning-interval"`
 		HaltHeight          int                `toml:"halt-height"`
 		HaltTime            int                `toml:"halt-time"`
 		MinRetainBlocks     int                `toml:"min-retain-blocks"`
@@ -280,8 +280,8 @@ const (
 
 	InvalidOrMissingTx = "invalid or missing tx"
 
-	PlanIsEmptyOrNil = " plan is empty or nil"
-
+	PlanIsEmptyOrNil    = "plan is empty or nil"
+	InvalidRequest      = "invalid request"
 	ResourcePlanIsEmpty = "resources in upgrade plan empty"
 
 	FilePermRO os.FileMode = 0444
@@ -292,6 +292,9 @@ const (
 	DirPermWR os.FileMode = 0755
 
 	SEKIN_LATEST_COMPOSE_URL = "https://raw.githubusercontent.com/KiraCore/sekin/main/compose.yml"
+
+	SIGKILL string = "SIGKILL" // 9 - interx
+	SIGTERM string = "SIGTERM" // 15 - sekai
 )
 
 var (
@@ -310,6 +313,7 @@ var (
 	ErrMultiplePublicIPAddresses = errors.New(MultiplePublicIPAddresses)
 
 	ErrPlanIsEmptyOrNil = errors.New(PlanIsEmptyOrNil)
+	ErrInvalidRequest   = errors.New(InvalidRequest)
 
 	SekaiFiles = InfraFiles{
 		"config.toml":        "/sekai/config/config.toml",
@@ -335,9 +339,9 @@ func NewDefaultAppConfig() *AppConfig {
 	return &AppConfig{
 		MinimumGasPrices:    "0stake",
 		Pruning:             "custom",
-		PruningKeepRecent:   2,
-		PruningKeepEvery:    100,
-		PruningInterval:     10,
+		PruningKeepRecent:   "2",
+		PruningKeepEvery:    "100",
+		PruningInterval:     "10",
 		HaltHeight:          0,
 		HaltTime:            0,
 		MinRetainBlocks:     0,
@@ -474,7 +478,7 @@ func NewDefaultConfig() *Config {
 			DiscoveryTime:       "15s",
 			TempDir:             "/tmp",
 			ChunkRequestTimeout: "10s",
-			ChunkFetchers:       4,
+			ChunkFetchers:       "4",
 		},
 		FastSyncConfig: FastSyncConfig{
 			Version: "v1",

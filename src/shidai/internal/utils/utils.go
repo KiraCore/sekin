@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -316,4 +317,52 @@ func ParseVersion(version string) (major, minor, patch int, err error) {
 	}
 
 	return major, minor, patch, nil
+}
+
+// validateToml is used to decode and validate if TOML matches the struct
+func ValidateToml(data []byte, result interface{}) error {
+	// Decode into map[string]interface{} to track extra fields
+	var rawMap map[string]interface{}
+	if _, err := toml.NewDecoder(bytes.NewReader(data)).Decode(&rawMap); err != nil {
+		return fmt.Errorf("failed to decode TOML into map: %w", err)
+	}
+
+	// Decode into the specific struct
+	if _, err := toml.Decode(string(data), result); err != nil {
+		return fmt.Errorf("failed to decode TOML into struct: %w", err)
+	}
+
+	// Ensure no extra fields exist in the TOML that aren't in the struct
+	if err := CheckForExtraFields(result, rawMap); err != nil {
+		return fmt.Errorf("extra fields found in TOML: %w", err)
+	}
+
+	return nil
+}
+
+// CheckForExtraFields compares the struct fields against the raw TOML map
+func CheckForExtraFields(structure interface{}, rawMap map[string]interface{}) error {
+	structValue := reflect.ValueOf(structure).Elem()
+	structType := structValue.Type()
+
+	// Build a set of valid field names
+	validFields := make(map[string]bool)
+	for i := 0; i < structValue.NumField(); i++ {
+		field := structType.Field(i)
+		tomlTag := field.Tag.Get("toml")
+		if tomlTag != "" {
+			validFields[tomlTag] = true
+		} else {
+			validFields[field.Name] = true
+		}
+	}
+
+	// Compare rawMap keys with struct fields
+	for key := range rawMap {
+		if !validFields[key] {
+			return fmt.Errorf("unexpected field '%s' found in TOML", key)
+		}
+	}
+
+	return nil
 }

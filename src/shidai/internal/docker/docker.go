@@ -69,3 +69,39 @@ func (cm *ContainerManager) ExecInContainer(ctx context.Context, containerID str
 	log.Info("Command executed successfully", zap.String("output", string(output)))
 	return output, nil
 }
+
+func (cm *ContainerManager) KillContainerWithSigkill(ctx context.Context, containerID, signal string) error {
+	log.Debug("Killing container", zap.String("container id", containerID), zap.String("kill signal", signal))
+
+	err := cm.Cli.ContainerKill(ctx, containerID, signal)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (cm *ContainerManager) ContainerIsRunning(ctx context.Context, containerName string) (bool, error) {
+	containers, err := cm.Cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		return false, err
+	}
+	for _, container := range containers {
+		for _, name := range container.Names {
+			if name == "/"+containerName && container.State == "running" {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (cm *ContainerManager) ContainerIsStopped(ctx context.Context, containerID string) (bool, error) {
+	containerJSON, err := cm.Cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return false, err // Handle the error, it might be that the container does not exist
+	}
+	log.Debug("checking if container is stopped", zap.String("container name", containerID), zap.String("container status", containerJSON.State.Status))
+	// The State.Status will tell if the container is "exited", "running", etc.
+	return containerJSON.State.Status == "exited", nil
+}
