@@ -62,12 +62,12 @@ func StartInterx(ctx context.Context) error {
 			return fmt.Errorf("unable execute <%v> request, error: %w", cmd, err)
 		}
 	}
-	go addrbookManager(ctx)
+
 	return nil
 }
 
 // run this in goroutine
-func addrbookManager(ctx context.Context) {
+func AddrbookManager(ctx context.Context) {
 	ticker := time.NewTicker(30 * time.Minute)
 	defer ticker.Stop()
 	errorCooldown := time.Second * 1

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kiracore/sekin/src/shidai/internal/commands"
+	interxhandler "github.com/kiracore/sekin/src/shidai/internal/interx_handler"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
 	"github.com/kiracore/sekin/src/shidai/internal/update"
@@ -33,7 +34,7 @@ func Serve() {
 
 	go backgroundUpdate()
 	go update.UpdateRunner(updateContext)
-
+	go interxhandler.AddrbookManager(context.Background())
 	if err := router.Run(":8282"); err != nil {
 		log.Error("Failed to start the server", zap.Error(err))
 	}
