@@ -1,8 +1,11 @@
 package api
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kiracore/sekin/src/shidai/internal/commands"
+	interxhandler "github.com/kiracore/sekin/src/shidai/internal/interx_handler"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
 	"go.uber.org/zap"
@@ -25,7 +28,7 @@ func Serve() {
 	router.GET("/dashboard", getDashboardHandler())
 
 	go backgroundUpdate()
-
+	go interxhandler.AddrbookManager(context.Background())
 	if err := router.Run(":8282"); err != nil {
 		log.Error("Failed to start the server", zap.Error(err))
 	}
