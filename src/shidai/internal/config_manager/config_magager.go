@@ -40,19 +40,41 @@ func GetAppToml(sekaiHome string) (*types.AppConfig, error) {
 	appTomlPath := filepath.Join(sekaiHome, "config", "app.toml")
 	log.Debug("Getting app.toml from", zap.String("path", appTomlPath))
 
-	var appToml types.AppConfig
-	_, err := toml.DecodeFile(appTomlPath, &appToml)
+	content, err := os.ReadFile(appTomlPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read file <%s>: %w", appTomlPath, err)
+	}
+	var appToml types.AppConfig
+	_, err = toml.Decode(appTomlPath, &appToml)
+	if err == nil {
+		return &appToml, nil
 	}
 
+	log.Warn("Direct decoding failed, attempting fallback", zap.Error(err))
+	var rawData map[string]interface{}
+
+	if _, decodeErr := toml.Decode(string(content), &rawData); decodeErr != nil {
+		return nil, fmt.Errorf("error decoding TOML during fallback: %w", decodeErr)
+	}
+
+	if err := appTomlConvertor(rawData); err != nil {
+		return nil, fmt.Errorf("error transforming config data: %w", err)
+	}
+
+	var buffer bytes.Buffer
+	if err := toml.NewEncoder(&buffer).Encode(rawData); err != nil {
+		return nil, fmt.Errorf("error re-encoding transformed data: %w", err)
+	}
+
+	if _, finalDecodeErr := toml.Decode(buffer.String(), &appToml); finalDecodeErr != nil {
+		return nil, fmt.Errorf("error decoding transformed data into struct: %w", finalDecodeErr)
+	}
 	return &appToml, nil
 }
 
 func GetConfigToml(sekaiHome string) (*types.Config, error) {
 	configTomlPath := filepath.Join(sekaiHome, "config", "config.toml")
 	log.Debug("Getting config.toml from", zap.String("path", configTomlPath))
-
 	content, err := os.ReadFile(configTomlPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file <%s>: %w", configTomlPath, err)
@@ -113,7 +135,12 @@ func configTomlConvertor(data map[string]interface{}) error {
 	}
 	return nil
 }
-
+func appTomlConvertor(data map[string]interface{}) error {
+	convertFieldFromNumToString(data, "pruning-keep-recent")
+	convertFieldFromNumToString(data, "pruning-keep-every")
+	convertFieldFromNumToString(data, "pruning-interval")
+	return nil
+}
 func convertFieldFromNumToString(data map[string]interface{}, field string) {
 	if value, exists := data[field]; exists {
 		switch v := value.(type) {
