@@ -70,6 +70,11 @@ func InitSekaiJoiner(ctx context.Context, tc *configconstructor.TargetSeedKiraCo
 	return nil
 }
 
+// TODO:
+func InitSekaiNew(ctx context.Context, masterMnemonicSet *mnemonicsgenerator.MasterMnemonicSet) error {
+	return nil
+}
+
 func setSekaidKeys(masterMnemonicSet *mnemonicsgenerator.MasterMnemonicSet) error {
 	log.Debug("Setting Sekaid keys", zap.String("home", types.SEKAI_HOME))
 

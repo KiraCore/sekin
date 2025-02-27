@@ -46,6 +46,7 @@ var (
 		"start":  handleStartComamnd,
 		"tx":     handleTxCommand,
 		"sekaid": handleSekaidCommand,
+		"new":    handleInitNewCommand,
 	}
 )
 
@@ -237,6 +238,72 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 	// Example of using the IP, and similar for other fields
 	// This function would contain the logic specific to handling a join command
 	return fmt.Sprintf("Join command processed for IP: %s", ip), nil
+}
+
+func handleInitNewCommand(args map[string]interface{}) (string, error) {
+	ip, ok := args["ip"].(string)
+	if !utils.ValidateIP(ip) || !ok {
+		return "", types.ErrInvalidOrMissingIP
+	}
+
+	m, ok := args["mnemonic"].(string)
+	if !utils.ValidateMnemonic(m) || !ok {
+		return "", types.ErrInvalidOrMissingMnemonic
+	}
+	pathsToDel := []string{"/sekai/", "/interx/"}
+	for _, path := range pathsToDel {
+		err := os.RemoveAll(path)
+		if err != nil {
+			log.Error("Failed to delele ", zap.String("path", path), zap.Error(err))
+		}
+	}
+
+	masterMnemonic, err := mnemonicmanager.GenerateMnemonicsFromMaster(m)
+	if err != nil {
+		return "", err
+	}
+
+	ctx := context.Background()
+
+	p2p, ok := args["p2p_port"].(float64)
+	if !utils.ValidatePort(int(p2p)) || !ok {
+		return "", types.ErrInvalidOrMissingP2PPort
+	}
+	rpc, ok := args["rpc_port"].(float64)
+	if !utils.ValidatePort(int(rpc)) || !ok {
+		return "", types.ErrInvalidOrMissingRPCPort
+	}
+	interx, ok := args["interx_port"].(float64)
+	if !utils.ValidatePort(int(interx)) || !ok {
+		return "", types.ErrInvalidOrMissingInterxPort
+	}
+
+	err = sekaihandler.InitSekaiNew(ctx, masterMnemonic)
+	if err != nil {
+		return "", err
+	}
+	err = sekaihandler.StartSekai()
+	if err != nil {
+		return "", fmt.Errorf("unable to start sekai: %w", err)
+	}
+	err = sekaihelper.CheckSekaiStart(ctx)
+	if err != nil {
+		return "", err
+	}
+	err = interxhandler.InitInterx(ctx, masterMnemonic)
+	if err != nil {
+		return "", fmt.Errorf("unable to init interx: %w", err)
+	}
+	err = interxhandler.StartInterx()
+	if err != nil {
+		return "", fmt.Errorf("unable to start interx: %w", err)
+	}
+	err = interxhelper.CheckInterxStart(ctx)
+	if err != nil {
+		return "", err
+
+	}
+	return "Seccusess", nil
 }
 
 func handleStatusCommand(args map[string]interface{}) (string, error) {
