@@ -15,6 +15,7 @@ import (
 
 	configconstructor "github.com/kiracore/sekin/src/shidai/internal/sekai_handler/config_constructor"
 	genesishandler "github.com/kiracore/sekin/src/shidai/internal/sekai_handler/genesis_handler"
+	scaller "github.com/kiracore/sekin/src/shidai/internal/sekai_handler/sekai_helper/s_caller"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
 	"github.com/kiracore/sekin/src/shidai/internal/utils"
 )
@@ -71,7 +72,33 @@ func InitSekaiJoiner(ctx context.Context, tc *configconstructor.TargetSeedKiraCo
 }
 
 // TODO:
-func InitSekaiNew(ctx context.Context, masterMnemonicSet *mnemonicsgenerator.MasterMnemonicSet) error {
+func InitSekaiNew(ctx context.Context, masterMnemonicSet *mnemonicsgenerator.MasterMnemonicSet, networkName, moniker string, coins []string) error {
+	log.Debug("Initializing Sekai Joiner", zap.String("home", types.SEKAI_HOME), zap.String("chain-id", networkName))
+
+	err := scaller.InitCmd(networkName, moniker)
+	if err != nil {
+		return err
+	}
+
+	err = setSekaidKeys(masterMnemonicSet)
+	if err != nil {
+		log.Error("Failed to set Sekai keys", zap.Error(err))
+		return fmt.Errorf("unable to set sekai keys: %w", err)
+	}
+
+	err = scaller.AddGenesisAccount(networkName, moniker, types.ValidatorAccountName, coins)
+	if err != nil {
+		return err
+	}
+	err = scaller.GentxClaimCmd(networkName, moniker, types.ValidatorAccountName)
+	if err != nil {
+		return err
+	}
+
+	err = configconstructor.FormSekaiGenesisConfigs()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -92,7 +119,7 @@ func setSekaidKeys(masterMnemonicSet *mnemonicsgenerator.MasterMnemonicSet) erro
 	}
 	log.Debug("Empty validator state set successfully")
 
-	_, err = utils.AddKeyToKeyring("validator", string(masterMnemonicSet.ValidatorAddrMnemonic), types.SEKAI_HOME, "test")
+	_, err = utils.AddKeyToKeyring(types.ValidatorAccountName, string(masterMnemonicSet.ValidatorAddrMnemonic), types.SEKAI_HOME, types.DefaultKeyring)
 	if err != nil {
 		log.Error("Failed to add validator key to keyring", zap.Error(err))
 		return fmt.Errorf("unable to add validator key to keyring: %w", err)
