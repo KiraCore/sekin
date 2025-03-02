@@ -267,17 +267,27 @@ const (
 
 	InvalidOrMissingTx = "invalid or missing tx"
 
+	InvalidOrMissingNetworkName = "invalid or missing network name"
+	InvalidOrMissingMoniker     = "invalid or missing moniker"
+	InvalidOrMissingCoins       = "invalid or mission coins, []string required"
+
 	FilePermRO os.FileMode = 0444
 	FilePermRW os.FileMode = 0644
 	FilePermEX os.FileMode = 0755
 
 	DirPermRO os.FileMode = 0555
 	DirPermWR os.FileMode = 0755
+
+	ValidatorAccountName = "validator"
+	DefaultKeyring       = "test"
 )
 
 var (
-	ErrInvalidOrMissingMnemonic = errors.New(InvalidOrMissingMnemonic)
-	ErrInvalidOrMissingIP       = errors.New(InvalidOrMissingIP)
+	ErrInvalidOrMissingMnemonic    = errors.New(InvalidOrMissingMnemonic)
+	ErrInvalidOrMissingIP          = errors.New(InvalidOrMissingIP)
+	ErrInvalidOrMissingNetworkName = errors.New(InvalidOrMissingNetworkName)
+	ErrInvalidOrMissingMoniker     = errors.New(InvalidOrMissingMoniker)
+	ErrInvalidOrMissingCoins       = errors.New(InvalidOrMissingCoins)
 
 	ErrInvalidOrMissingTx = errors.New(InvalidOrMissingTx)
 
