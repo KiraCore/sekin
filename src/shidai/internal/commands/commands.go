@@ -241,15 +241,23 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 }
 
 func handleInitNewCommand(args map[string]interface{}) (string, error) {
-	ip, ok := args["ip"].(string)
-	if !utils.ValidateIP(ip) || !ok {
-		return "", types.ErrInvalidOrMissingIP
+	moniker, ok := args["moniker"].(string)
+	if !ok {
+		return "", types.ErrInvalidOrMissingMoniker
 	}
-
+	networkName, ok := args["network_name"].(string)
+	if !ok {
+		return "", types.ErrInvalidOrMissingNetworkName
+	}
 	m, ok := args["mnemonic"].(string)
 	if !utils.ValidateMnemonic(m) || !ok {
 		return "", types.ErrInvalidOrMissingMnemonic
 	}
+	coins, err := parseCoins(args)
+	if err != nil {
+		return "", err
+	}
+
 	pathsToDel := []string{"/sekai/", "/interx/"}
 	for _, path := range pathsToDel {
 		err := os.RemoveAll(path)
@@ -265,20 +273,7 @@ func handleInitNewCommand(args map[string]interface{}) (string, error) {
 
 	ctx := context.Background()
 
-	p2p, ok := args["p2p_port"].(float64)
-	if !utils.ValidatePort(int(p2p)) || !ok {
-		return "", types.ErrInvalidOrMissingP2PPort
-	}
-	rpc, ok := args["rpc_port"].(float64)
-	if !utils.ValidatePort(int(rpc)) || !ok {
-		return "", types.ErrInvalidOrMissingRPCPort
-	}
-	interx, ok := args["interx_port"].(float64)
-	if !utils.ValidatePort(int(interx)) || !ok {
-		return "", types.ErrInvalidOrMissingInterxPort
-	}
-
-	err = sekaihandler.InitSekaiNew(ctx, masterMnemonic)
+	err = sekaihandler.InitSekaiNew(ctx, masterMnemonic, networkName, moniker, coins)
 	if err != nil {
 		return "", err
 	}
@@ -303,7 +298,29 @@ func handleInitNewCommand(args map[string]interface{}) (string, error) {
 		return "", err
 
 	}
-	return "Seccusess", nil
+	return "Successes", nil
+}
+
+func parseCoins(args map[string]interface{}) ([]string, error) {
+	rawCoins, exists := args["coins"]
+	if !exists {
+		return []string{}, types.ErrInvalidOrMissingCoins
+	}
+
+	coinsInterface, ok := rawCoins.([]interface{})
+	if !ok {
+		return []string{}, types.ErrInvalidOrMissingCoins
+	}
+
+	var coins []string
+	for _, c := range coinsInterface {
+		if str, ok := c.(string); ok {
+			coins = append(coins, str)
+		} else {
+			return []string{}, types.ErrInvalidOrMissingCoins
+		}
+	}
+	return coins, nil
 }
 
 func handleStatusCommand(args map[string]interface{}) (string, error) {
