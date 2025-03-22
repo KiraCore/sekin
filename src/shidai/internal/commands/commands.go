@@ -6,9 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
-	dtypes "github.com/docker/docker/api/types"
 	"github.com/kiracore/sekin/src/shidai/internal/docker"
 	interxhandler "github.com/kiracore/sekin/src/shidai/internal/interx_handler"
 	interxhelper "github.com/kiracore/sekin/src/shidai/internal/interx_handler/interx_helper"
@@ -184,13 +182,18 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 	if !utils.ValidateMnemonic(m) || !ok {
 		return "", types.ErrInvalidOrMissingMnemonic
 	}
-	pathsToDel := []string{"/sekai/", "/interx/"}
-	for _, path := range pathsToDel {
-		err := os.RemoveAll(path)
-		if err != nil {
-			log.Error("Failed to delele ", zap.String("path", path), zap.Error(err))
+
+	wipeData := func() {
+		pathsToDel := []string{"/sekai/", "/interx/"}
+		for _, path := range pathsToDel {
+			err := os.RemoveAll(path)
+			if err != nil {
+				log.Error("Failed to delete ", zap.String("path", path), zap.Error(err))
+			}
 		}
 	}
+
+	wipeData()
 
 	masterMnemonic, err := mnemonicmanager.GenerateMnemonicsFromMaster(m)
 	if err != nil {
@@ -223,6 +226,15 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 	}
 	err = sekaihelper.CheckSekaiStart(ctx)
 	if err != nil {
+		err = sekaihandler.StopSekai(ctx)
+		if err != nil {
+			log.Debug("unable to stop sekai", zap.Error(err))
+		}
+		err = interxhandler.StopInterx(ctx)
+		if err != nil {
+			log.Debug("unable to stop interx", zap.Error(err))
+		}
+		wipeData()
 		return "", err
 	}
 	err = interxhandler.InitInterx(ctx, masterMnemonic)
@@ -235,6 +247,15 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 	}
 	err = interxhelper.CheckInterxStart(ctx)
 	if err != nil {
+		err = sekaihandler.StopSekai(ctx)
+		if err != nil {
+			log.Debug("unable to stop sekai", zap.Error(err))
+		}
+		err = interxhandler.StopInterx(ctx)
+		if err != nil {
+			log.Debug("unable to stop interx", zap.Error(err))
+		}
+		wipeData()
 		return "", err
 	}
 	// Example of using the IP, and similar for other fields
@@ -277,69 +298,17 @@ func handleStartComamnd(args map[string]interface{}) (string, error) {
 }
 
 func handleStopCommand(args map[string]interface{}) (string, error) {
-	cm, err := docker.NewContainerManager()
-	if err != nil {
-		return "", err
-	}
 	ctx := context.Background()
 
-	running, err := cm.ContainerIsRunning(ctx, types.SEKAI_CONTAINER_ID)
+	err := sekaihandler.StopSekai(ctx)
 	if err != nil {
 		return "", err
 	}
-	if running {
-		sekaiErr := cm.KillContainerWithSigkill(ctx, types.SEKAI_CONTAINER_ID, types.SIGTERM)
-		if sekaiErr != nil {
-			return "", err
-		}
-		for i := range 5 {
-			log.Debug("checking if container is stopped")
-			stopped, sekaiErr := cm.ContainerIsStopped(ctx, types.SEKAI_CONTAINER_ID)
-			if sekaiErr != nil {
-				return "", err
-			}
-			if stopped {
-				sekaiErr = cm.Cli.ContainerStart(ctx, types.SEKAI_CONTAINER_ID, dtypes.ContainerStartOptions{})
-				if sekaiErr != nil {
-					return "", err
-				}
-				break
-			} else {
-				log.Debug("container is not stopped yet, waiting to shutdown", zap.Int("attempt", i))
-				time.Sleep(time.Second)
-			}
 
-		}
-	}
-
-	running, err = cm.ContainerIsRunning(ctx, types.INTERX_CONTAINER_ID)
+	err = interxhandler.StopInterx(ctx)
 	if err != nil {
 		return "", err
 	}
-	if running {
-		interxErr := cm.KillContainerWithSigkill(ctx, types.INTERX_CONTAINER_ID, types.SIGKILL)
-		if interxErr != nil {
-			return "", err
-		}
 
-		for i := range 5 {
-			log.Debug("checking if container is stopped")
-			stopped, interxErr := cm.ContainerIsStopped(ctx, types.INTERX_CONTAINER_ID)
-			if interxErr != nil {
-				return "", err
-			}
-			if stopped {
-				interxErr = cm.Cli.ContainerStart(ctx, types.INTERX_CONTAINER_ID, dtypes.ContainerStartOptions{})
-				if interxErr != nil {
-					return "", err
-				}
-				break
-			} else {
-				log.Debug("container is not stopped yet, waiting to shutdown", zap.Int("attempt", i))
-				time.Sleep(time.Second)
-			}
-		}
-	}
-
-	return "Sekai and Interx stoped seccessfully", nil
+	return "Sekai and Interx stoped successfully", nil
 }
