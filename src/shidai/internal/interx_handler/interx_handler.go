@@ -8,8 +8,10 @@ import (
 	"time"
 
 	mnemonicsgenerator "github.com/KiraCore/tools/validator-key-gen/MnemonicsGenerator"
+	dtypes "github.com/docker/docker/api/types"
 	"go.uber.org/zap"
 
+	"github.com/kiracore/sekin/src/shidai/internal/docker"
 	httpexecutor "github.com/kiracore/sekin/src/shidai/internal/http_executor"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
@@ -63,6 +65,42 @@ func StartInterx(ctx context.Context) error {
 		}
 	}
 
+	return nil
+}
+
+func StopInterx(ctx context.Context) error {
+	cm, err := docker.NewContainerManager()
+	if err != nil {
+		return err
+	}
+	running, err := cm.ContainerIsRunning(ctx, types.INTERX_CONTAINER_ID)
+	if err != nil {
+		return err
+	}
+	if running {
+		interxErr := cm.KillContainerWithSigkill(ctx, types.INTERX_CONTAINER_ID, types.SIGKILL)
+		if interxErr != nil {
+			return err
+		}
+
+		for i := range 5 {
+			log.Debug("checking if container is stopped")
+			stopped, interxErr := cm.ContainerIsStopped(ctx, types.INTERX_CONTAINER_ID)
+			if interxErr != nil {
+				return err
+			}
+			if stopped {
+				interxErr = cm.Cli.ContainerStart(ctx, types.INTERX_CONTAINER_ID, dtypes.ContainerStartOptions{})
+				if interxErr != nil {
+					return err
+				}
+				break
+			} else {
+				log.Debug("container is not stopped yet, waiting to shutdown", zap.Int("attempt", i))
+				time.Sleep(time.Second)
+			}
+		}
+	}
 	return nil
 }
 

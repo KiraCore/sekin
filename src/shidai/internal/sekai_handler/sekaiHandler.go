@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	mnemonicsgenerator "github.com/KiraCore/tools/validator-key-gen/MnemonicsGenerator"
+	dtypes "github.com/docker/docker/api/types"
+	"github.com/kiracore/sekin/src/shidai/internal/docker"
 	httpexecutor "github.com/kiracore/sekin/src/shidai/internal/http_executor"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	mnemonicmanager "github.com/kiracore/sekin/src/shidai/internal/mnemonic_manager"
@@ -117,5 +120,41 @@ func StartSekai() error {
 	}
 	log.Debug("Sekai start command executed successfully")
 
+	return nil
+}
+
+func StopSekai(ctx context.Context) error {
+	cm, err := docker.NewContainerManager()
+	if err != nil {
+		return err
+	}
+	running, err := cm.ContainerIsRunning(ctx, types.SEKAI_CONTAINER_ID)
+	if err != nil {
+		return err
+	}
+	if running {
+		sekaiErr := cm.KillContainerWithSigkill(ctx, types.SEKAI_CONTAINER_ID, types.SIGTERM)
+		if sekaiErr != nil {
+			return err
+		}
+		for i := range 5 {
+			log.Debug("checking if container is stopped")
+			stopped, sekaiErr := cm.ContainerIsStopped(ctx, types.SEKAI_CONTAINER_ID)
+			if sekaiErr != nil {
+				return err
+			}
+			if stopped {
+				sekaiErr = cm.Cli.ContainerStart(ctx, types.SEKAI_CONTAINER_ID, dtypes.ContainerStartOptions{})
+				if sekaiErr != nil {
+					return err
+				}
+				break
+			} else {
+				log.Debug("container is not stopped yet, waiting to shutdown", zap.Int("attempt", i))
+				time.Sleep(time.Second)
+			}
+
+		}
+	}
 	return nil
 }
