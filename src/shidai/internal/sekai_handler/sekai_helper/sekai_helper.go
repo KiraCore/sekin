@@ -41,7 +41,7 @@ func GetSekaidStatus(ctx context.Context, ipAddress, rpcPort string) (*sekai.Sta
 }
 
 func CheckSekaiStart(ctx context.Context) error {
-	timeout := time.Second * 60
+	timeout := time.Second * 120
 	log.Debug("Checking if sekai is started with timeout ", zap.Duration("timeout", timeout))
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
