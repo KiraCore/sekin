@@ -277,6 +277,10 @@ const (
 
 	InvalidOrMissingTx = "invalid or missing tx"
 
+	InvalidOrMissingNetworkName = "invalid or missing network name"
+	InvalidOrMissingMoniker     = "invalid or missing moniker"
+	InvalidOrMissingCoins       = "invalid or mission coins, []string required"
+
 	InvalidRequest = "invalid request"
 
 	FilePermRO os.FileMode = 0444
@@ -286,6 +290,9 @@ const (
 	DirPermRO os.FileMode = 0555
 	DirPermWR os.FileMode = 0755
 
+	ValidatorAccountName = "validator"
+	DefaultKeyring       = "test"
+
 	UPDATER_BIN_PATH         = "/updater"
 	SEKIN_LATEST_COMPOSE_URL = "https://raw.githubusercontent.com/KiraCore/sekin/main/compose.yml"
 
@@ -294,8 +301,11 @@ const (
 )
 
 var (
-	ErrInvalidOrMissingMnemonic = errors.New(InvalidOrMissingMnemonic)
-	ErrInvalidOrMissingIP       = errors.New(InvalidOrMissingIP)
+	ErrInvalidOrMissingMnemonic    = errors.New(InvalidOrMissingMnemonic)
+	ErrInvalidOrMissingIP          = errors.New(InvalidOrMissingIP)
+	ErrInvalidOrMissingNetworkName = errors.New(InvalidOrMissingNetworkName)
+	ErrInvalidOrMissingMoniker     = errors.New(InvalidOrMissingMoniker)
+	ErrInvalidOrMissingCoins       = errors.New(InvalidOrMissingCoins)
 
 	ErrInvalidOrMissingTx = errors.New(InvalidOrMissingTx)
 

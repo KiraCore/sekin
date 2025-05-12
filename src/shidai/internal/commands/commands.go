@@ -49,6 +49,7 @@ var (
 		"tx":     handleTxCommand,
 		"sekaid": handleSekaidCommand,
 		"stop":   handleStopCommand,
+		"new":    handleInitNewCommand,
 	}
 )
 
@@ -240,6 +241,89 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 	// Example of using the IP, and similar for other fields
 	// This function would contain the logic specific to handling a join command
 	return fmt.Sprintf("Join command processed for IP: %s", ip), nil
+}
+
+func handleInitNewCommand(args map[string]interface{}) (string, error) {
+	moniker, ok := args["moniker"].(string)
+	if !ok {
+		return "", types.ErrInvalidOrMissingMoniker
+	}
+	networkName, ok := args["network_name"].(string)
+	if !ok {
+		return "", types.ErrInvalidOrMissingNetworkName
+	}
+	m, ok := args["mnemonic"].(string)
+	if !utils.ValidateMnemonic(m) || !ok {
+		return "", types.ErrInvalidOrMissingMnemonic
+	}
+	coins, err := parseCoins(args)
+	if err != nil {
+		return "", err
+	}
+
+	pathsToDel := []string{"/sekai/", "/interx/"}
+	for _, path := range pathsToDel {
+		err := os.RemoveAll(path)
+		if err != nil {
+			log.Error("Failed to delele ", zap.String("path", path), zap.Error(err))
+		}
+	}
+
+	masterMnemonic, err := mnemonicmanager.GenerateMnemonicsFromMaster(m)
+	if err != nil {
+		return "", err
+	}
+
+	ctx := context.Background()
+
+	err = sekaihandler.InitSekaiNew(ctx, masterMnemonic, networkName, moniker, coins)
+	if err != nil {
+		return "", err
+	}
+	err = sekaihandler.StartSekai()
+	if err != nil {
+		return "", fmt.Errorf("unable to start sekai: %w", err)
+	}
+	err = sekaihelper.CheckSekaiStart(ctx)
+	if err != nil {
+		return "", err
+	}
+	err = interxhandler.InitInterx(ctx, masterMnemonic)
+	if err != nil {
+		return "", fmt.Errorf("unable to init interx: %w", err)
+	}
+	err = interxhandler.StartInterx()
+	if err != nil {
+		return "", fmt.Errorf("unable to start interx: %w", err)
+	}
+	err = interxhelper.CheckInterxStart(ctx)
+	if err != nil {
+		return "", err
+
+	}
+	return "Successes", nil
+}
+
+func parseCoins(args map[string]interface{}) ([]string, error) {
+	rawCoins, exists := args["coins"]
+	if !exists {
+		return []string{}, types.ErrInvalidOrMissingCoins
+	}
+
+	coinsInterface, ok := rawCoins.([]interface{})
+	if !ok {
+		return []string{}, types.ErrInvalidOrMissingCoins
+	}
+
+	var coins []string
+	for _, c := range coinsInterface {
+		if str, ok := c.(string); ok {
+			coins = append(coins, str)
+		} else {
+			return []string{}, types.ErrInvalidOrMissingCoins
+		}
+	}
+	return coins, nil
 }
 
 func handleStatusCommand(args map[string]interface{}) (string, error) {
