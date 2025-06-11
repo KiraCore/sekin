@@ -34,6 +34,7 @@ const (
 	DEFAULT_P2P_PORT    int    = 26656
 	DEFAULT_RPC_PORT    int    = 26657
 	DEFAULT_GRPC_PORT   int    = 9090
+	DEFAULT_API_PORT    int    = 1317
 
 	SEKAI_CONFIG_FOLDER  string = SEKAI_HOME + "/config"
 	INTERX_ADDRBOOK_PATH string = INTERX_HOME + "/addrbook.json"
