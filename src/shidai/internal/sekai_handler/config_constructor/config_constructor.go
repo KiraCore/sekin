@@ -244,6 +244,10 @@ func GetJoinerAppConfig(config *types.AppConfig) *types.AppConfig {
 	config.PruningInterval = "10"
 	config.GRPC.Address = fmt.Sprintf("0.0.0.0:%v", types.DEFAULT_GRPC_PORT)
 
+	// new interx required fields
+	config.API.Enable = true
+	config.API.Address = fmt.Sprintf("tcp://0.0.0.0:%v", types.DEFAULT_API_PORT)
+
 	return config
 }
 
