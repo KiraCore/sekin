@@ -225,18 +225,18 @@ func handleJoinCommand(args map[string]interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = interxhandler.InitInterx(ctx, masterMnemonic)
-	if err != nil {
-		return "", fmt.Errorf("unable to init interx: %w", err)
-	}
-	err = interxhandler.StartInterx(ctx)
-	if err != nil {
-		return "", fmt.Errorf("unable to start interx: %w", err)
-	}
-	err = interxhelper.CheckInterxStart(ctx)
-	if err != nil {
-		return "", err
-	}
+	// err = interxhandler.InitInterx(ctx, masterMnemonic)
+	// if err != nil {
+	// 	return "", fmt.Errorf("unable to init interx: %w", err)
+	// }
+	// err = interxhandler.StartInterx(ctx)
+	// if err != nil {
+	// 	return "", fmt.Errorf("unable to start interx: %w", err)
+	// }
+	// err = interxhelper.CheckInterxStart(ctx)
+	// if err != nil {
+	// 	return "", err
+	// }
 	// Example of using the IP, and similar for other fields
 	// This function would contain the logic specific to handling a join command
 	return fmt.Sprintf("Join command processed for IP: %s", ip), nil
