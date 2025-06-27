@@ -45,6 +45,7 @@ func CheckSekaiStart(ctx context.Context) error {
 	log.Debug("Checking if sekai is started with timeout ", zap.Duration("timeout", timeout))
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+	requestCooldown := time.Second * 1
 
 	for {
 		select {
@@ -68,5 +69,6 @@ func CheckSekaiStart(ctx context.Context) error {
 				return nil
 			}
 		}
+		time.Sleep(requestCooldown)
 	}
 }
