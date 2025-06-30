@@ -9,9 +9,10 @@ import (
 	"strconv"
 	"sync"
 
-	interxendpoint "github.com/KiraCore/kensho/types/interxEndpoint"
+	// interxendpoint "github.com/KiraCore/kensho/types/interxEndpoint"
 	sekaihelper "github.com/kiracore/sekin/src/shidai/internal/sekai_handler/sekai_helper"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
+	sekaiendpoint "github.com/kiracore/sekin/src/shidai/internal/types/endpoints/sekai"
 )
 
 // crawl network over sekaid's endpoint
@@ -93,8 +94,10 @@ func (np *SekaiNetworkParser) loopFunc(ctx context.Context, wg *sync.WaitGroup, 
 
 	currentDepth++
 
-	var nodeInfo *interxendpoint.NetInfo
-	var status *interxendpoint.Status
+	// var nodeInfo *interxendpoint.NetInfo
+	var nodeInfo *sekaiendpoint.NetInfo
+	// var status *interxendpoint.Status
+	var status *sekaiendpoint.Status
 	var errNetInfo error
 	var errStatus error
 
@@ -103,11 +106,13 @@ func (np *SekaiNetworkParser) loopFunc(ctx context.Context, wg *sync.WaitGroup, 
 	localWaitGroup.Add(2)
 	go func() {
 		defer localWaitGroup.Done()
-		nodeInfo, errNetInfo = GetNetInfoFromInterx(ctx, client, ip)
+		nodeInfo, errNetInfo = sekaihelper.GetNetInfo(ctx, ip, strconv.Itoa(types.DEFAULT_RPC_PORT))
+		// nodeInfo, errNetInfo = GetNetInfoFromInterx(ctx, client, ip)
 	}()
 	go func() {
 		defer localWaitGroup.Done()
-		status, errStatus = GetStatusFromInterx(ctx, client, ip)
+		// status, errStatus = GetStatusFromInterx(ctx, client, ip)
+		status, errStatus = sekaihelper.GetSekaidStatus(ctx, ip, strconv.Itoa(types.DEFAULT_RPC_PORT))
 	}()
 	localWaitGroup.Wait()
 	// nodeInfo, errNetInfo = GetNetInfoFromInterx(ctx, client, ip)
@@ -125,15 +130,20 @@ func (np *SekaiNetworkParser) loopFunc(ctx context.Context, wg *sync.WaitGroup, 
 	}
 
 	np.mu.Lock()
-	log.Printf("adding <%v> to the pool, nPeers: %v", ip, nodeInfo.NPeers)
+	log.Printf("adding <%v> to the pool, nPeers: %v", ip, nodeInfo.Result.NPeers)
 
+	nPeers, err := strconv.Atoi(nodeInfo.Result.NPeers)
+	if err != nil {
+		log.Printf("unable to parse %v value %v", nodeInfo.Result.NPeers, err)
+		return
+	}
 	node := Node{
 		IP:      ip,
-		NCPeers: nodeInfo.NPeers,
-		ID:      status.NodeInfo.ID,
+		NCPeers: nPeers,
+		ID:      status.Result.NodeInfo.ID,
 	}
 
-	for _, nn := range nodeInfo.Peers {
+	for _, nn := range nodeInfo.Result.Peers {
 		ip, port, err := extractIP(nn.NodeInfo.ListenAddr)
 		if err != nil {
 			continue
@@ -145,7 +155,7 @@ func (np *SekaiNetworkParser) loopFunc(ctx context.Context, wg *sync.WaitGroup, 
 	cleanValue(processed, ip)
 	np.mu.Unlock()
 
-	for _, p := range nodeInfo.Peers {
+	for _, p := range nodeInfo.Result.Peers {
 		wg.Add(1)
 		go np.loopFunc(ctx, wg, client, pool, blacklist, processed, p.RemoteIP, currentDepth, totalDepth, ignoreDepth)
 
