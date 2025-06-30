@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/KiraCore/kensho/helper/networkparser"
 	httpexecutor "github.com/kiracore/sekin/src/shidai/internal/http_executor"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
 	sekaihelper "github.com/kiracore/sekin/src/shidai/internal/sekai_handler/sekai_helper"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
 	"github.com/kiracore/sekin/src/shidai/internal/utils"
+	networkparser "github.com/kiracore/sekin/src/shidai/pkg/network_parser"
 	"go.uber.org/zap"
 )
 
@@ -106,8 +106,14 @@ func retrieveNetworkInformation(ctx context.Context, tc *TargetSeedKiraConfig) (
 		return nil, fmt.Errorf("getting Sekaid status: %w", err)
 	}
 
+	tcRpcPort, err := strconv.Atoi(tc.SekaidRPCPort)
+	if err != nil {
+		return nil, err
+	}
+
 	// Parse all peers in the network
-	nodes, _, err := networkparser.GetAllNodesV3(ctx, tc.IpAddress, 3, false)
+	parser := networkparser.NewSekaiNetworkParser()
+	nodes, _, err := parser.Scan(ctx, tc.IpAddress, tcRpcPort, 3, false)
 	if err != nil {
 		log.Error("Failed to parse peers", zap.Error(err))
 		return nil, fmt.Errorf("unable to parse peers: %w", err)
