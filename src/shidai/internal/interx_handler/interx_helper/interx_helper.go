@@ -54,7 +54,7 @@ func GetInterxStatus(ctx context.Context, ip, port string) (*interx.Status, erro
 	ctxWithTO, c := context.WithTimeout(ctx, time.Second*10)
 	defer c()
 	// log.Printf("Getting net_info from: %v", ip)
-	url := fmt.Sprintf("http://%v:%v/api/status", ip, port)
+	url := fmt.Sprintf("http://%v:%v/%v", ip, port, types.ENDPOINT_INTERX_STATUS)
 	req, err := http.NewRequestWithContext(ctxWithTO, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -77,4 +77,36 @@ func GetInterxStatus(ctx context.Context, ip, port string) (*interx.Status, erro
 		return nil, err
 	}
 	return &nodeStatus, nil
+}
+
+func GetNetInfo(ctx context.Context, ipAddress, port string) (*interx.NetInfo, error) {
+	url := fmt.Sprintf("http://%s:%s/%s", ipAddress, port, types.ENDPOINT_INTERX_NET_INFO)
+	client := &http.Client{}
+	log.Debug("Querying sekai status by url:", zap.String("url", url))
+
+	ctxWithTO, c := context.WithTimeout(ctx, time.Second*10)
+	defer c()
+	req, err := http.NewRequestWithContext(ctxWithTO, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var response *interx.NetInfo
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
