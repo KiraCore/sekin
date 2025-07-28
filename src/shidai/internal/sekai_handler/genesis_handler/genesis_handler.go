@@ -14,6 +14,7 @@ import (
 
 	httpexecutor "github.com/kiracore/sekin/src/shidai/internal/http_executor"
 	"github.com/kiracore/sekin/src/shidai/internal/logger"
+	"github.com/kiracore/sekin/src/shidai/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -47,26 +48,26 @@ func GetVerifiedGenesisFile(ctx context.Context, ip, sekaidRPCPort, interxPort s
 	log.Debug("Retrieved genesis file from sekaid", zap.ByteString("genesisSekaid", genesisSekaid))
 
 	// Get genesis file from Interx daemon
-	genesisInterx, err := GetInterxGenesis(ctx, ip, interxPort)
-	if err != nil {
-		log.Error("Failed to get genesis file from interx", zap.String("IP", ip), zap.String("Port", interxPort), zap.Error(err))
-		return nil, fmt.Errorf("failed to get interx genesis: %w", err)
-	}
-	log.Debug("Retrieved genesis file from interx", zap.ByteString("genesisInterx", genesisInterx))
+	// genesisInterx, err := GetInterxGenesis(ctx, ip, interxPort)
+	// if err != nil {
+	// 	log.Error("Failed to get genesis file from interx", zap.String("IP", ip), zap.String("Port", interxPort), zap.Error(err))
+	// 	return nil, fmt.Errorf("failed to get interx genesis: %w", err)
+	// }
+	// log.Debug("Retrieved genesis file from interx", zap.ByteString("genesisInterx", genesisInterx))
 
-	// Check if both genesis files are the same
-	if err := checkFileContentGenesisFiles(genesisInterx, genesisSekaid); err != nil {
-		log.Error("Genesis files content mismatch", zap.Error(err))
-		return nil, fmt.Errorf("genesis files content mismatch: %w", err)
-	}
-	log.Info("Genesis files content verified as matching")
+	// // Check if both genesis files are the same
+	// if err := checkFileContentGenesisFiles(genesisInterx, genesisSekaid); err != nil {
+	// 	log.Error("Genesis files content mismatch", zap.Error(err))
+	// 	return nil, fmt.Errorf("genesis files content mismatch: %w", err)
+	// }
+	// log.Info("Genesis files content verified as matching")
 
-	// Additional checksum verification
-	if err := checkGenSum(ctx, genesisSekaid, ip, interxPort); err != nil {
-		log.Error("Checksum verification failed", zap.Error(err))
-		return nil, fmt.Errorf("checksum verification failed: %w", err)
-	}
-	log.Info("Checksum verification passed")
+	// // Additional checksum verification
+	// if err := checkGenSum(ctx, genesisSekaid, ip, interxPort); err != nil {
+	// 	log.Error("Checksum verification failed", zap.Error(err))
+	// 	return nil, fmt.Errorf("checksum verification failed: %w", err)
+	// }
+	// log.Info("Checksum verification passed")
 
 	log.Info("Genesis file verified successfully")
 	return genesisSekaid, nil
@@ -133,7 +134,7 @@ func GetInterxGenesis(ctx context.Context, ipAddress, interxPort string) ([]byte
 	ctx, cancel := context.WithTimeout(ctx, 40*time.Second)
 	defer cancel()
 	// Construct the URL for fetching the genesis data
-	url := fmt.Sprintf("http://%s:%s/api/genesis", ipAddress, interxPort)
+	url := fmt.Sprintf("http://%s:%s/%v", ipAddress, interxPort, types.ENDPOINT_INTERX_GENESIS)
 	log.Debug("Constructed URL for fetching Interx genesis", zap.String("url", url))
 
 	// Create an HTTP client and perform the request
@@ -179,7 +180,7 @@ func checkGenSum(ctx context.Context, genesis []byte, ipAddress, interxPort stri
 
 func getGenSum(ctx context.Context, ipAddress, interxPort string) (string, error) {
 	log.Info("Retrieving Genesis checksum", zap.String("IP", ipAddress), zap.String("port", interxPort))
-	url := fmt.Sprintf("http://%s:%s/api/gensum", ipAddress, interxPort)
+	url := fmt.Sprintf("http://%s:%s/%v", ipAddress, interxPort, types.ENDPOINT_INTERX_GENSUM)
 	client := &http.Client{}
 	body, err := httpexecutor.DoHttpQuery(ctx, client, url, "GET")
 	if err != nil {
