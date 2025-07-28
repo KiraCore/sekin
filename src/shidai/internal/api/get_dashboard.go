@@ -371,7 +371,14 @@ func fetchValidatorDataFromValopersAPI(ctx context.Context, address string, upda
 		return
 	}
 
-	url := fmt.Sprintf("http://interx.local:11000/api/valopers?address=%s", address)
+	// url := fmt.Sprintf("http://interx.local:11000/api/valopers?address=%s", address)
+	url := fmt.Sprintf("http://%v:%v/%v?address=%s",
+		types.INTERX_CONTAINER_ADDRESS,
+		types.DEFAULT_INTERX_PORT,
+		types.ENDPOINT_INTERX_VALOPERS,
+		address,
+	)
+
 	resp, err := http.Get(url)
 	if err != nil {
 		done <- fmt.Errorf("failed to make HTTP request: %w", err)
@@ -431,7 +438,13 @@ func fetchValidatorsStatus(ctx context.Context, address string, updates chan<- *
 		return
 	}
 
-	url := "http://interx.local:11000/api/valopers?all=true"
+	// url := "http://interx.local:11000/api/valopers?all=true"
+	url := fmt.Sprintf("http://%v:%v/%v?all=true",
+		types.INTERX_CONTAINER_ADDRESS,
+		types.DEFAULT_INTERX_PORT,
+		types.ENDPOINT_INTERX_VALOPERS,
+	)
+
 	resp, err := http.Get(url)
 	if err != nil {
 		done <- fmt.Errorf("failed to make HTTP request: %w", err)
@@ -484,7 +497,8 @@ func fetchValidatorsStatus(ctx context.Context, address string, updates chan<- *
 func fetchNodeStatus(ctx context.Context, updates chan<- *Dashboard, done chan<- error) {
 	defer func() { done <- nil }()
 	log.Debug("Fetching node status from interx")
-	url := "http://interx.local:11000/api/status"
+	// url := "http://interx.local:11000/api/status"
+	url := fmt.Sprintf("http://%v:%v/%v", types.INTERX_CONTAINER_ADDRESS, types.DEFAULT_INTERX_PORT, types.ENDPOINT_INTERX_STATUS)
 	resp, err := http.Get(url)
 	if err != nil {
 		done <- fmt.Errorf("failed to make HTTP request: %w", err)
