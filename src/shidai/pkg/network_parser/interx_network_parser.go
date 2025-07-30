@@ -12,7 +12,7 @@ import (
 
 	interxhelper "github.com/kiracore/sekin/src/shidai/internal/interx_handler/interx_helper"
 	"github.com/kiracore/sekin/src/shidai/internal/types"
-	"github.com/kiracore/sekin/src/shidai/internal/types/endpoints/interx"
+	interxv2 "github.com/kiracore/sekin/src/shidai/internal/types/endpoints/interx_V2"
 )
 
 type InterxNetworkParser struct {
@@ -25,12 +25,12 @@ func NewInterxNetworkParser() *InterxNetworkParser {
 }
 
 // get nodes that are available by 11000 port
-func (np *InterxNetworkParser) Scan(ctx context.Context, firstNode string, depth int, ignoreDepth bool) (map[string]Node, map[string]BlacklistedNode, error) {
+func (np *InterxNetworkParser) Scan(ctx context.Context, firstNode string, port, depth int, ignoreDepth bool) (map[string]Node, map[string]BlacklistedNode, error) {
 	nodesPool := make(map[string]Node)
 	blacklist := make(map[string]BlacklistedNode)
 	processed := make(map[string]string)
 	client := http.DefaultClient
-	node, err := interxhelper.GetNetInfo(ctx, firstNode, strconv.Itoa(types.DEFAULT_INTERX_PORT))
+	node, err := interxhelper.GetNetInfoV2(ctx, firstNode, port)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -82,9 +82,9 @@ func (np *InterxNetworkParser) loopFunc(ctx context.Context, wg *sync.WaitGroup,
 	np.mu.Unlock()
 
 	currentDepth++
-
-	var nodeInfo *interx.NetInfo
-	var status *interx.Status
+	// interxv2
+	var nodeInfo *interxv2.NetInfo
+	var status *interxv2.Status
 	var errNetInfo error
 	var errStatus error
 
@@ -93,11 +93,11 @@ func (np *InterxNetworkParser) loopFunc(ctx context.Context, wg *sync.WaitGroup,
 	localWaitGroup.Add(2)
 	go func() {
 		defer localWaitGroup.Done()
-		nodeInfo, errNetInfo = interxhelper.GetNetInfo(ctx, ip, strconv.Itoa(types.DEFAULT_INTERX_PORT))
+		nodeInfo, errNetInfo = interxhelper.GetNetInfoV2(ctx, ip, types.DEFAULT_INTERX_PORT)
 	}()
 	go func() {
 		defer localWaitGroup.Done()
-		status, errStatus = interxhelper.GetInterxStatus(ctx, ip, strconv.Itoa(types.DEFAULT_INTERX_PORT))
+		status, errStatus = interxhelper.GetInterxStatusV2(ctx, ip, types.DEFAULT_INTERX_PORT)
 	}()
 	localWaitGroup.Wait()
 	// nodeInfo, errNetInfo = GetNetInfoFromInterx(ctx, client, ip)
@@ -116,10 +116,13 @@ func (np *InterxNetworkParser) loopFunc(ctx context.Context, wg *sync.WaitGroup,
 
 	np.mu.Lock()
 	log.Printf("adding <%v> to the pool, nPeers: %v", ip, nodeInfo.NPeers)
-
+	npeers, err := strconv.Atoi(nodeInfo.NPeers)
+	if err != nil {
+		return
+	}
 	node := Node{
 		IP:      ip,
-		NCPeers: nodeInfo.NPeers,
+		NCPeers: npeers,
 		ID:      status.NodeInfo.ID,
 	}
 
