@@ -87,6 +87,12 @@ func DoHttpQuery(ctx context.Context, client *http.Client, url, method string) (
 	defer resp.Body.Close()
 	log.Debug("HTTP request sent successfully", zap.Int("status_code", resp.StatusCode))
 
+	if resp.StatusCode != http.StatusOK {
+		log.Error("Non-OK HTTP status received", zap.Int("status", resp.StatusCode))
+		return nil, fmt.Errorf("unexpected HTTP status: %s", resp.Status)
+	}
+	log.Debug("!!!!HERE STATUS CODE", zap.Int("status code", resp.StatusCode))
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Error("Failed to read response body", zap.Error(err))
