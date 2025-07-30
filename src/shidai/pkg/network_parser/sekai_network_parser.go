@@ -42,7 +42,7 @@ func (np *SekaiNetworkParser) Scan(ctx context.Context, firstNodeIP string, port
 	blacklist := make(map[string]BlacklistedNode)
 	processed := make(map[string]string)
 	client := http.DefaultClient
-	node, err := sekaihelper.GetNetInfo(ctx, firstNodeIP, strconv.Itoa(types.DEFAULT_RPC_PORT))
+	node, err := sekaihelper.GetNetInfo(ctx, firstNodeIP, strconv.Itoa(port))
 	if err != nil {
 		return nil, nil, err
 	}
