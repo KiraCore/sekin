@@ -123,9 +123,13 @@ var (
 
 // interx endpoints
 const (
-	ENDPOINT_INTERX_STATUS   string = "api/status"
-	ENDPOINT_INTERX_NET_INFO string = "api/net_info"
-	ENDPOINT_INTERX_GENESIS  string = "api/genesis"
-	ENDPOINT_INTERX_GENSUM   string = "api/gensum"
+	ENDPOINT_INTERX_STATUS string = "api/status"
+	// ENDPOINT_INTERX_NET_INFO string = "api/net_info" // old
+	ENDPOINT_INTERX_NET_INFO string = "api/tendermint/net_info"
+
+	// ENDPOINT_INTERX_GENESIS  string = "api/genesis" // old
+	ENDPOINT_INTERX_GENESIS  string = "api/tendermint/genesis"
 	ENDPOINT_INTERX_VALOPERS string = "api/valopers"
+
+	// ENDPOINT_INTERX_GENSUM   string = "api/gensum" // not working at all
 )
