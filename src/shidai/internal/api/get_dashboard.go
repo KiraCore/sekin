@@ -177,12 +177,12 @@ func updateDashboard() error {
 
 	go func() {
 		defer wg.Done()
-		fetchValidatorDataFromValopersAPI(ctx, dashboardData.ValidatorAddress, dashboardUpdates, done)
+		FetchValidatorDataFromValopersAPI(ctx, dashboardData.ValidatorAddress, dashboardUpdates, done)
 	}()
 
 	go func() {
 		defer wg.Done()
-		fetchValidatorsStatus(ctx, dashboardData.ValidatorAddress, dashboardUpdates, done)
+		FetchValidatorsStatus(ctx, dashboardData.ValidatorAddress, dashboardUpdates, done)
 	}()
 
 	go func() {
@@ -363,7 +363,7 @@ func fetchAccAddressFromSekaidBin(ctx context.Context, cm *docker.ContainerManag
 	updates <- &Dashboard{ValidatorAddress: result.Address}
 }
 
-func fetchValidatorDataFromValopersAPI(ctx context.Context, address string, updates chan<- *Dashboard, done chan<- error) {
+func FetchValidatorDataFromValopersAPI(ctx context.Context, address string, updates chan<- *Dashboard, done chan<- error) {
 	defer func() { done <- nil }()
 	log.Debug("Fetching data from valopers endpoint")
 	if address == "" {
@@ -430,7 +430,7 @@ func fetchValidatorDataFromValopersAPI(ctx context.Context, address string, upda
 
 	updates <- update
 }
-func fetchValidatorsStatus(ctx context.Context, address string, updates chan<- *Dashboard, done chan<- error) {
+func FetchValidatorsStatus(ctx context.Context, address string, updates chan<- *Dashboard, done chan<- error) {
 	defer func() { done <- nil }()
 	log.Debug("Fetching validators status block")
 	if address == "" {
