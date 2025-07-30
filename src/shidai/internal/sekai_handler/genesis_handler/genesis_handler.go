@@ -2,9 +2,7 @@ package genesishandler
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,7 +38,7 @@ func GetVerifiedGenesisFile(ctx context.Context, ip, sekaidRPCPort, interxPort s
 	log.Info("Starting to get the verified genesis file", zap.String("IP", ip), zap.String("sekaidRPCPort", sekaidRPCPort), zap.String("interxPort", interxPort))
 
 	// Get genesis file from Sekai daemon
-	genesisSekaid, err := getSekaidGenesis(ctx, ip, sekaidRPCPort)
+	genesisSekaid, err := GetSekaidGenesis(ctx, ip, sekaidRPCPort)
 	if err != nil {
 		log.Error("Failed to get genesis file from sekaid", zap.String("IP", ip), zap.String("Port", sekaidRPCPort), zap.Error(err))
 		return nil, fmt.Errorf("failed to get sekaid genesis: %w", err)
@@ -60,9 +58,9 @@ func GetVerifiedGenesisFile(ctx context.Context, ip, sekaidRPCPort, interxPort s
 	// 	log.Error("Genesis files content mismatch", zap.Error(err))
 	// 	return nil, fmt.Errorf("genesis files content mismatch: %w", err)
 	// }
-	// log.Info("Genesis files content verified as matching")
+	log.Info("Genesis files content verified as matching")
 
-	// // Additional checksum verification
+	// // // Additional checksum verification
 	// if err := checkGenSum(ctx, genesisSekaid, ip, interxPort); err != nil {
 	// 	log.Error("Checksum verification failed", zap.Error(err))
 	// 	return nil, fmt.Errorf("checksum verification failed: %w", err)
@@ -70,12 +68,14 @@ func GetVerifiedGenesisFile(ctx context.Context, ip, sekaidRPCPort, interxPort s
 	// log.Info("Checksum verification passed")
 
 	log.Info("Genesis file verified successfully")
+	// return genesisInterx, nil
 	return genesisSekaid, nil
+
 }
 
-// getSekaidGenesis retrieves the complete Sekaid Genesis data from a target Sekaid node
+// GetSekaidGenesis retrieves the complete Sekaid Genesis data from a target Sekaid node
 // by fetching the data in chunks using the Sekaid RPC API.
-func getSekaidGenesis(ctx context.Context, ipAddress, sekaidRPCport string) ([]byte, error) {
+func GetSekaidGenesis(ctx context.Context, ipAddress, sekaidRPCport string) ([]byte, error) {
 	log.Info("Starting to get the sekaid genesis", zap.String("IP", ipAddress), zap.String("port", sekaidRPCport))
 
 	var completeGenesis []byte
@@ -149,61 +149,110 @@ func GetInterxGenesis(ctx context.Context, ipAddress, interxPort string) ([]byte
 	return body, nil
 }
 
+// func checkFileContentGenesisFiles(genesis1, genesis2 []byte) error {
+// 	log.Info("Checking file content of two genesis files")
+// 	log.Debug("genesis check:", zap.Int("len genesis1", len(genesis1)), zap.Int("len genesis2", len(genesis2)))
+
+// 	if string(genesis1) != string(genesis2) {
+// 		log.Error("Genesis files content does not match")
+// 		return ErrFilesContentNotIdentical
+// 	}
+// 	log.Info("Genesis files content match confirmed")
+// 	return nil
+// }
+
 func checkFileContentGenesisFiles(genesis1, genesis2 []byte) error {
 	log.Info("Checking file content of two genesis files")
-	if string(genesis1) != string(genesis2) {
-		log.Error("Genesis files content does not match")
-		return ErrFilesContentNotIdentical
+	log.Debug("genesis check:", zap.Int("len genesis1", len(genesis1)), zap.Int("len genesis2", len(genesis2)))
+
+	if string(genesis1) == string(genesis2) {
+		log.Info("Genesis files content match confirmed")
+		return nil
 	}
-	log.Info("Genesis files content match confirmed")
-	return nil
+
+	log.Error("Genesis files content does not match")
+
+	lines1 := strings.Split(string(genesis1), "\n")
+	lines2 := strings.Split(string(genesis2), "\n")
+
+	maxLines := len(lines1)
+	if len(lines2) > maxLines {
+		maxLines = len(lines2)
+	}
+
+	for i := 0; i < maxLines; i++ {
+		line1 := ""
+		line2 := ""
+
+		if i < len(lines1) {
+			line1 = lines1[i]
+		}
+		if i < len(lines2) {
+			line2 = lines2[i]
+		}
+
+		if line1 != line2 {
+			log.Warn("Mismatch found",
+				zap.Int("line", i+1),
+				zap.String("genesis1", line1),
+				zap.String("genesis2", line2),
+			)
+			return ErrFilesContentNotIdentical
+		}
+	}
+
+	// If we reach here, it's likely a whitespace or newline difference
+	log.Warn("Files differ but no line mismatch detected — likely whitespace issues")
+	return ErrFilesContentNotIdentical
 }
 
-func checkGenSum(ctx context.Context, genesis []byte, ipAddress, interxPort string) error {
-	log.Info("Checking Genesis checksum", zap.String("IP", ipAddress), zap.String("port", interxPort))
-	genesisSum, err := getGenSum(ctx, ipAddress, interxPort)
-	if err != nil {
-		log.Error("Failed to retrieve genesis checksum from Interx", zap.Error(err))
-		return fmt.Errorf("can't get genesis check sum: %w", err)
-	}
+// deprecated
+// func checkGenSum(ctx context.Context, genesis []byte, ipAddress, interxPort string) error {
+// 	log.Info("Checking Genesis checksum", zap.String("IP", ipAddress), zap.String("port", interxPort))
+// 	genesisSum, err := getGenSum(ctx, ipAddress, interxPort)
+// 	if err != nil {
+// 		log.Error("Failed to retrieve genesis checksum from Interx", zap.Error(err))
+// 		return fmt.Errorf("can't get genesis check sum: %w", err)
+// 	}
 
-	genSumGenesisHash := sha256.Sum256(genesis)
-	hashString := hex.EncodeToString(genSumGenesisHash[:])
-	if genesisSum != hashString {
-		log.Error("Genesis checksum mismatch", zap.String("expected", genesisSum), zap.String("actual", hashString))
-		return ErrSHA256ChecksumMismatch
-	}
+// 	genSumGenesisHash := sha256.Sum256(genesis)
+// 	hashString := hex.EncodeToString(genSumGenesisHash[:])
+// 	if genesisSum != hashString {
+// 		log.Error("Genesis checksum mismatch", zap.String("expected", genesisSum), zap.String("actual", hashString))
+// 		return ErrSHA256ChecksumMismatch
+// 	}
 
-	log.Info("Genesis checksum verified successfully")
-	return nil
-}
+// 	log.Info("Genesis checksum verified successfully")
+// 	return nil
+// }
 
-func getGenSum(ctx context.Context, ipAddress, interxPort string) (string, error) {
-	log.Info("Retrieving Genesis checksum", zap.String("IP", ipAddress), zap.String("port", interxPort))
-	url := fmt.Sprintf("http://%s:%s/%v", ipAddress, interxPort, types.ENDPOINT_INTERX_GENSUM)
-	client := &http.Client{}
-	body, err := httpexecutor.DoHttpQuery(ctx, client, url, "GET")
-	if err != nil {
-		log.Error("Failed to fetch genesis sum", zap.Error(err))
-		return "", err
-	}
+// deprecated
+// func getGenSum(ctx context.Context, ipAddress, interxPort string) (string, error) {
+// 	log.Info("Retrieving Genesis checksum", zap.String("IP", ipAddress), zap.String("port", interxPort))
+// 	url := fmt.Sprintf("http://%s:%s/%v", ipAddress, interxPort, types.ENDPOINT_INTERX_GENSUM)
+// 	client := &http.Client{}
+// 	body, err := httpexecutor.DoHttpQuery(ctx, client, url, "GET")
+// 	if err != nil {
+// 		log.Error("Failed to fetch genesis sum", zap.Error(err))
+// 		return "", err
+// 	}
 
-	var result ResponseCheckSum
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		log.Error("Failed to unmarshal genesis sum response", zap.ByteString("response", body), zap.Error(err))
-		return "", err
-	}
+// 	var result ResponseCheckSum
+// 	err = json.Unmarshal(body, &result)
+// 	if err != nil {
+// 		log.Error("Failed to unmarshal genesis sum response", zap.ByteString("response", body), zap.Error(err))
+// 		return "", err
+// 	}
 
-	trimmedChecksum, err := trimPrefix(result.Checksum, "0x")
-	if err != nil {
-		log.Error("Failed to trim '0x' prefix from genesis sum", zap.String("checksum", result.Checksum), zap.Error(err))
-		return "", err
-	}
+// 	trimmedChecksum, err := trimPrefix(result.Checksum, "0x")
+// 	if err != nil {
+// 		log.Error("Failed to trim '0x' prefix from genesis sum", zap.String("checksum", result.Checksum), zap.Error(err))
+// 		return "", err
+// 	}
 
-	log.Info("Genesis checksum retrieved and formatted", zap.String("checksum", trimmedChecksum))
-	return trimmedChecksum, nil
-}
+// 	log.Info("Genesis checksum retrieved and formatted", zap.String("checksum", trimmedChecksum))
+// 	return trimmedChecksum, nil
+// }
 
 type StringPrefixError struct {
 	StringValue string
