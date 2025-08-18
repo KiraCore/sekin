@@ -131,5 +131,7 @@ const (
 	ENDPOINT_INTERX_GENESIS  string = "api/tendermint/genesis"
 	ENDPOINT_INTERX_VALOPERS string = "api/valopers"
 
+	ENDPOINT_INTERX_DASHBOARD string = "dashboard"
+
 	// ENDPOINT_INTERX_GENSUM   string = "api/gensum" // not working at all
 )

@@ -442,7 +442,7 @@ func FetchValidatorsStatus(ctx context.Context, address string, updates chan<- *
 	url := fmt.Sprintf("http://%v:%v/%v?all=true",
 		types.INTERX_CONTAINER_ADDRESS,
 		types.DEFAULT_INTERX_PORT,
-		types.ENDPOINT_INTERX_VALOPERS,
+		types.ENDPOINT_INTERX_DASHBOARD,
 	)
 
 	resp, err := http.Get(url)
