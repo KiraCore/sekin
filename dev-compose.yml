@@ -3,7 +3,7 @@ services:
   sekai:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/sekai:v0.3.45
+    image: ghcr.io/kiracore/sekin/sekai:v0.4.13
     restart: always
     logging:
       driver: syslog
@@ -19,33 +19,33 @@ services:
       - "26657:26657"           # RPC
       - "26656:26656"           # P2P (gRPC)
       - "26660:26660"           # Prometheus
-      - "127.0.0.1:8080:8080"             # RPC scaller
+      - "127.0.0.1:8181:8080"             # RPC scaller
 
     networks:
       kiranet:
         ipv4_address: 10.1.0.3
     hostname: sekai.local
 
-  interx:
-    depends_on:
-      - syslog-ng
-    image: ghcr.io/kiracore/sekin/interx:v0.4.48
-    restart: always
-    logging:
-      driver: syslog
-      options:
-        syslog-address: "udp://10.1.0.2:514"
-        syslog-facility: local0
-        tag: "interx"
-    volumes:
-      - ./interx:/interx
-    ports:
-      - "11000:11000"
-      - "127.0.0.1:8081:8081"
-    networks:
-      kiranet:
-        ipv4_address: 10.1.0.4
-    hostname: interx.local
+  # interx:
+  #   depends_on:
+  #     - syslog-ng
+  #   image: ghcr.io/kiracore/sekin/interx:v0.4.48
+  #   restart: always
+  #   logging:
+  #     driver: syslog
+  #     options:
+  #       syslog-address: "udp://10.1.0.2:514"
+  #       syslog-facility: local0
+  #       tag: "interx"
+  #   volumes:
+  #     - ./interx:/interx
+  #   ports:
+  #     - "11000:11000"
+  #     - "127.0.0.1:8081:8081"
+  #   networks:
+  #     kiranet:
+  #       ipv4_address: 10.1.0.4
+  #   hostname: interx.local
 
   shidai:
     depends_on:
