@@ -28,13 +28,17 @@ type (
 )
 
 const (
-	SEKAI_HOME          string = "/sekai"
-	INTERX_HOME         string = "/interx"
-	DEFAULT_INTERX_PORT int    = 11000
-	DEFAULT_P2P_PORT    int    = 26656
-	DEFAULT_RPC_PORT    int    = 26657
-	DEFAULT_GRPC_PORT   int    = 9090
-	DEFAULT_API_PORT    int    = 1317
+	SEKAI_HOME  string = "/sekai"
+	INTERX_HOME string = "/interx"
+
+	// TODO: if plans change and interx manager will change default port to 11000 - switch back (for network parser)
+	// DEFAULT_INTERX_PORT int    = 11000
+	DEFAULT_INTERX_PORT int = 80
+
+	DEFAULT_P2P_PORT  int = 26656
+	DEFAULT_RPC_PORT  int = 26657
+	DEFAULT_GRPC_PORT int = 9090
+	DEFAULT_API_PORT  int = 1317
 
 	SEKAI_CONFIG_FOLDER  string = SEKAI_HOME + "/config"
 	INTERX_ADDRBOOK_PATH string = INTERX_HOME + "/addrbook.json"
