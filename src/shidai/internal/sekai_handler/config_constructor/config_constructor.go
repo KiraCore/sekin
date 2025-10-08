@@ -61,6 +61,25 @@ type ResponseBlock struct {
 	} `json:"result"`
 }
 
+func FormSekaiGenesisConfigs() error {
+	configTomlSavePath := path.Join(types.SEKAI_HOME, "config", "config.toml")
+	configToml := types.NewDefaultConfig()
+	appToml := types.NewDefaultAppConfig()
+
+	err := utils.SaveConfig(configTomlSavePath, *configToml)
+	if err != nil {
+		return err
+	}
+
+	appTomlSavePath := path.Join(types.SEKAI_HOME, "config", "app.toml")
+	appToml = GetGenesisAppConfig(appToml)
+	err = utils.SaveAppConfig(appTomlSavePath, *appToml)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func FormSekaiJoinerConfigs(tc *TargetSeedKiraConfig) error {
 	ctx := context.Background()
 
@@ -226,6 +245,17 @@ func getConfigsBasedOnSeed(ctx context.Context, netInfo *networkInfo, tc *Target
 	return cfgToUpdate, nil
 }
 
+func GetGenesisAppConfig(config *types.AppConfig) *types.AppConfig {
+	config.StateSync.SnapshotInterval = 1000
+	config.StateSync.SnapshotKeepRecent = 2
+	config.Pruning = "nothing"
+	config.PruningKeepRecent = 2
+	config.PruningKeepEvery = 100
+	config.PruningInterval = 10
+	config.GRPC.Address = fmt.Sprintf("0.0.0.0:%v", types.DEFAULT_GRPC_PORT)
+
+	return config
+}
 func GetJoinerAppConfig(config *types.AppConfig) *types.AppConfig {
 	// return []utilsTypes.TomlValue{
 	// 	{Tag: "state-sync", Name: "snapshot-interval", Value: "200"},
