@@ -19,38 +19,194 @@ services:
       - "26657:26657"           # RPC
       - "26656:26656"           # P2P (gRPC)
       - "26660:26660"           # Prometheus
-      - "127.0.0.1:8181:8080"             # RPC scaller
+      - "127.0.0.1:8181:8080"   # RPC sCaller
+      - "1317:1317"             # REST API
+      - "9090:9090"             # gRPC
+
 
     networks:
       kiranet:
         ipv4_address: 10.1.0.3
     hostname: sekai.local
 
-  # interx:
-  #   depends_on:
-  #     - syslog-ng
-  #   image: ghcr.io/kiracore/sekin/interx:v0.4.49
-  #   restart: always
-  #   logging:
-  #     driver: syslog
-  #     options:
-  #       syslog-address: "udp://10.1.0.2:514"
-  #       syslog-facility: local0
-  #       tag: "interx"
-  #   volumes:
-  #     - ./interx:/interx
-  #   ports:
-  #     - "11000:11000"
-  #     - "127.0.0.1:8081:8081"
-  #   networks:
-  #     kiranet:
-  #       ipv4_address: 10.1.0.4
-  #   hostname: interx.local
+  # Manager - P2P load balancer and HTTP server
+  manager:
+    depends_on:
+      - syslog-ng
+    image: ghcr.io/kiracore/interx/manager:v0.6.0
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "manager"
+    ports:
+      - "8080:8080"             # HTTP server
+      - "9000:9000/udp"         # P2P UDP
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.4
+    volumes:
+      - "./manager/config.yml:/srv/config.yml"
+      - "./manager/logs:/srv/logs"
+    hostname: manager.local
+
+  # Proxy - Legacy HTTP request converter
+  proxy:
+    depends_on:
+      - syslog-ng
+    image: ghcr.io/kiracore/interx/proxy:v0.6.0
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "proxy"
+    ports:
+      - "80:8080"               # HTTP proxy
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.10
+    volumes:
+      - "./proxy/config.yml:/srv/config.yml"
+      - "./proxy/logs:/srv/logs"
+    hostname: proxy.local
+
+  # Storage - MongoDB storage service
+  storage:
+    depends_on:
+      - syslog-ng
+      - mongo
+    image: ghcr.io/kiracore/interx/storage:v0.6.0
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "storage"
+    expose:
+      - "8880"
+    volumes:
+      - "./worker/sai-storage-mongo/config.yml:/srv/config.yml"
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.11
+    hostname: storage.local
+
+  # Cosmos Indexer - Indexes Cosmos blockchain data
+  cosmos-indexer:
+    depends_on:
+      - syslog-ng
+    image: ghcr.io/kiracore/interx/cosmos-indexer:v0.6.0
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "cosmos-indexer"
+    expose:
+      - "8883"
+    volumes:
+      - "./worker/cosmos/sai-cosmos-indexer/config.yml:/srv/config.yml"
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.12
+    hostname: cosmos-indexer.local
+
+  # Cosmos Interaction - Creates and publishes Cosmos transactions
+  cosmos-interaction:
+    depends_on:
+      - syslog-ng
+    image: ghcr.io/kiracore/interx/cosmos-interaction:v0.6.0
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "cosmos-interaction"
+    expose:
+      - "8884"
+    volumes:
+      - "./worker/cosmos/sai-cosmos-interaction/config.yml:/srv/config.yml"
+      - "./worker/cosmos/sai-cosmos-interaction/kira19g3ueqj45wv0pqngeu0hcysjksns76r2nrz63u:/srv/kira19g3ueqj45wv0pqngeu0hcysjksns76r2nrz63u"
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.13
+    hostname: cosmos-interaction.local
+
+  # Ethereum Indexer - Indexes Ethereum blockchain data
+  ethereum-indexer:
+    depends_on:
+      - syslog-ng
+    image: ghcr.io/kiracore/interx/ethereum-indexer:v0.6.0
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "ethereum-indexer"
+    expose:
+      - "8881"
+    volumes:
+      - "./worker/ethereum/sai-ethereum-indexer/block.data:/srv/block.data"
+      - "./worker/ethereum/sai-ethereum-indexer/config.json:/srv/config.json"
+      - "./worker/ethereum/sai-ethereum-indexer/contracts.json:/srv/contracts.json"
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.14
+    hostname: ethereum-indexer.local
+
+  # Ethereum Interaction - Creates and publishes Ethereum transactions
+  ethereum-interaction:
+    depends_on:
+      - syslog-ng
+    image: ghcr.io/kiracore/interx/ethereum-interaction:v0.6.0
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "ethereum-interaction"
+    expose:
+      - "8882"
+    volumes:
+      - "./worker/ethereum/sai-ethereum-contract-interaction/config.yml:/srv/config.yml"
+      - "./worker/ethereum/sai-ethereum-contract-interaction/contracts.json:/srv/contracts.json"
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.15
+    hostname: ethereum-interaction.local
+
+  # MongoDB - Database for storage service
+  mongo:
+    depends_on:
+      - syslog-ng
+    image: mongo:7.0
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "mongo"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.16
+    hostname: mongo.local
 
   shidai:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/shidai:v0.13.0
+    image: ghcr.io/kiracore/sekin/shidai:v0.14.0
     restart: always
     ports:
       - "127.0.0.1:8282:8282"
@@ -67,7 +223,7 @@ services:
     hostname: shidai.local
 
   syslog-ng:
-    image: ghcr.io/kiracore/sekin/syslog-ng:v0.13.0
+    image: ghcr.io/kiracore/sekin/syslog-ng:v0.14.0
     restart: always
     healthcheck:
       test: ["CMD", "pgrep", "syslog-ng"]
@@ -80,13 +236,16 @@ services:
     volumes:
       - ./syslog-data:/var/log
     ports:
-      - "514:514/udp"
-      - "514:514"
+      - "127.0.0.1:514:514/udp"
+      - "127.0.0.1:514:514"
     networks:
       kiranet:
         ipv4_address: 10.1.0.2
 
     hostname: syslog-ng.local
+
+volumes:
+  mongo_data:
 
 networks:
   kiranet:

@@ -1,0 +1,10 @@
+common:
+  http:
+    enabled: false
+    port: 8080
+  ws:
+    enabled: false
+    port: 8881
+
+manager:
+  url: http://manager:8080

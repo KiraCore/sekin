@@ -1,0 +1,43 @@
+common:
+  http:
+    enabled: true
+    port: 8080
+  ws:
+    enabled: false
+    port: 8881
+
+storage:
+  token: ""
+  url: "http://worker-sai-storage:8880"
+ethereum:
+  interaction: "http://worker-sai-ethereum-interaction:8882"
+  nodes:
+    chain1: "https://data-seed-prebsc-1-s1.bnbchain.org:8545"
+  token: ""
+  retries: 1
+  retry_delay: 10
+  rate_limit: 100000
+cosmos:
+  node:
+    json_rpc: "sekai.local:9090"
+    tendermint: "http://sekai.local:26657"
+  tx_modes:
+    sync: true
+    async: true
+    block: true
+  gw_timeout: 30
+  interaction: "http://worker-sai-cosmos-interaction:8884"
+  token: ""
+  retries: 1
+  retry_delay: 10
+  rate_limit: 2
+
+p2p:
+  id: "1"
+  address: "127.0.0.1:9000"
+  peers: []
+  max_peers: 2
+
+balancer:
+  window_size: 60
+  threshold: 0.2

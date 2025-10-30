@@ -1,7 +1,45 @@
 sekai/*
-interx/*
 syslog-data/*
 test/*
 src/shidai/test/*
 shidai/*
 .vscode
+tmp/*
+
+# Ignore everything in manager except config.yml
+manager/*
+!manager/config.yml
+
+# Ignore everything in proxy except config.yml
+proxy/*
+!proxy/config.yml
+
+# Ignore everything in worker except specific config files
+worker/*
+!worker/sai-storage-mongo/
+worker/sai-storage-mongo/*
+!worker/sai-storage-mongo/config.yml
+
+!worker/cosmos/
+worker/cosmos/*
+!worker/cosmos/sai-cosmos-indexer/
+worker/cosmos/sai-cosmos-indexer/*
+!worker/cosmos/sai-cosmos-indexer/config.yml
+
+!worker/cosmos/sai-cosmos-interaction/
+worker/cosmos/sai-cosmos-interaction/*
+!worker/cosmos/sai-cosmos-interaction/config.yml
+!worker/cosmos/sai-cosmos-interaction/kira19g3ueqj45wv0pqngeu0hcysjksns76r2nrz63u
+
+!worker/ethereum/
+worker/ethereum/*
+!worker/ethereum/sai-ethereum-indexer/
+worker/ethereum/sai-ethereum-indexer/*
+!worker/ethereum/sai-ethereum-indexer/config.json
+!worker/ethereum/sai-ethereum-indexer/contracts.json
+!worker/ethereum/sai-ethereum-indexer/block.data
+
+!worker/ethereum/sai-ethereum-contract-interaction/
+worker/ethereum/sai-ethereum-contract-interaction/*
+!worker/ethereum/sai-ethereum-contract-interaction/config.yml
+!worker/ethereum/sai-ethereum-contract-interaction/contracts.json

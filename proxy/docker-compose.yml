@@ -1,0 +1,23 @@
+services:
+  proxy:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:8080"
+    networks:
+      - interx-proxy
+    volumes:
+      - "./config.yml:/srv/config.yml"
+      - "./logs:/srv/logs"
+    logging:
+      driver: "local"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+networks:
+  interx-proxy:
+    name: interx_default
+    external: true

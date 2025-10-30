@@ -1,0 +1,79 @@
+---
+name: Update Interx Services
+
+on:
+  repository_dispatch:
+    types: [interx_release]
+
+jobs:
+  update_compose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sekin repository
+        uses: actions/checkout@v4
+
+      - name: Extract payload data
+        id: payload-extract
+        run: |
+          echo "VERSION=${{ github.event.client_payload.version }}" >> $GITHUB_ENV
+          echo "MANAGER_IMAGE=${{ github.event.client_payload.manager_image }}" >> $GITHUB_ENV
+          echo "PROXY_IMAGE=${{ github.event.client_payload.proxy_image }}" >> $GITHUB_ENV
+          echo "STORAGE_IMAGE=${{ github.event.client_payload.storage_image }}" >> $GITHUB_ENV
+          echo "COSMOS_INDEXER_IMAGE=${{ github.event.client_payload.cosmos_indexer_image }}" >> $GITHUB_ENV
+          echo "COSMOS_INTERACTION_IMAGE=${{ github.event.client_payload.cosmos_interaction_image }}" >> $GITHUB_ENV
+          echo "ETHEREUM_INDEXER_IMAGE=${{ github.event.client_payload.ethereum_indexer_image }}" >> $GITHUB_ENV
+          echo "ETHEREUM_INTERACTION_IMAGE=${{ github.event.client_payload.ethereum_interaction_image }}" >> $GITHUB_ENV
+
+      - name: Debug info
+        run: |
+          echo "VERSION: ${{ env.VERSION }}"
+          echo "MANAGER_IMAGE: ${{ env.MANAGER_IMAGE }}"
+          echo "PROXY_IMAGE: ${{ env.PROXY_IMAGE }}"
+          echo "STORAGE_IMAGE: ${{ env.STORAGE_IMAGE }}"
+          echo "COSMOS_INDEXER_IMAGE: ${{ env.COSMOS_INDEXER_IMAGE }}"
+          echo "COSMOS_INTERACTION_IMAGE: ${{ env.COSMOS_INTERACTION_IMAGE }}"
+          echo "ETHEREUM_INDEXER_IMAGE: ${{ env.ETHEREUM_INDEXER_IMAGE }}"
+          echo "ETHEREUM_INTERACTION_IMAGE: ${{ env.ETHEREUM_INTERACTION_IMAGE }}"
+
+      - name: Update manager image version in compose.yml
+        run: |
+          sed -i "s|ghcr.io/kiracore/interx/manager:v[0-9]*\.[0-9]*\.[0-9]*|${{ env.MANAGER_IMAGE }}|g" compose.yml
+
+      - name: Update proxy image version in compose.yml
+        run: |
+          sed -i "s|ghcr.io/kiracore/interx/proxy:v[0-9]*\.[0-9]*\.[0-9]*|${{ env.PROXY_IMAGE }}|g" compose.yml
+
+      - name: Update storage image version in compose.yml
+        run: |
+          sed -i "s|ghcr.io/kiracore/interx/storage:v[0-9]*\.[0-9]*\.[0-9]*|${{ env.STORAGE_IMAGE }}|g" compose.yml
+
+      - name: Update cosmos-indexer image version in compose.yml
+        run: |
+          sed -i "s|ghcr.io/kiracore/interx/cosmos-indexer:v[0-9]*\.[0-9]*\.[0-9]*|${{ env.COSMOS_INDEXER_IMAGE }}|g" compose.yml
+
+      - name: Update cosmos-interaction image version in compose.yml
+        run: |
+          sed -i "s|ghcr.io/kiracore/interx/cosmos-interaction:v[0-9]*\.[0-9]*\.[0-9]*|${{ env.COSMOS_INTERACTION_IMAGE }}|g" compose.yml
+
+      - name: Update ethereum-indexer image version in compose.yml
+        run: |
+          sed -i "s|ghcr.io/kiracore/interx/ethereum-indexer:v[0-9]*\.[0-9]*\.[0-9]*|${{ env.ETHEREUM_INDEXER_IMAGE }}|g" compose.yml
+
+      - name: Update ethereum-interaction image version in compose.yml
+        run: |
+          sed -i "s|ghcr.io/kiracore/interx/ethereum-interaction:v[0-9]*\.[0-9]*\.[0-9]*|${{ env.ETHEREUM_INTERACTION_IMAGE }}|g" compose.yml
+
+      - name: Commit and push updated compose.yml
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add compose.yml
+          git commit -m "feat(ci/cd): Update interx microservices to ${{ env.VERSION }}" \
+                     -m "* Update manager image to ${{ env.VERSION }}" \
+                     -m "* Update proxy image to ${{ env.VERSION }}" \
+                     -m "* Update storage image to ${{ env.VERSION }}" \
+                     -m "* Update cosmos-indexer image to ${{ env.VERSION }}" \
+                     -m "* Update cosmos-interaction image to ${{ env.VERSION }}" \
+                     -m "* Update ethereum-indexer image to ${{ env.VERSION }}" \
+                     -m "* Update ethereum-interaction image to ${{ env.VERSION }}"
+          git push

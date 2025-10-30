@@ -1,0 +1,76 @@
+services:
+  worker-sai-ethereum-indexer:
+    build:
+      context: ./ethereum/sai-ethereum-indexer
+      dockerfile: Dockerfile
+    expose:
+      - "8881:8881"
+    volumes:
+      - ./ethereum/sai-ethereum-indexer/block.data:/srv/block.data
+      - ./ethereum/sai-ethereum-indexer/config.json:/srv/config.json
+      - ./ethereum/sai-ethereum-indexer/contracts.json:/srv/contracts.json
+    networks:
+      - interx-worker
+
+  worker-sai-ethereum-interaction:
+    build:
+      context: ./ethereum/sai-ethereum-contract-interaction
+      dockerfile: Dockerfile
+    expose:
+      - "8882:8882"
+    volumes:
+      - ./ethereum/sai-ethereum-contract-interaction/config.yml:/srv/config.yml
+      - ./ethereum/sai-ethereum-contract-interaction/contracts.json:/srv/contracts.json
+    networks:
+      - interx-worker
+
+  worker-sai-cosmos-indexer:
+    build:
+      context: ./cosmos/sai-cosmos-indexer
+      dockerfile: Dockerfile
+    expose:
+      - "8883:8883"
+    volumes:
+      - ./cosmos/sai-cosmos-indexer/config.yml:/srv/config.yml
+    networks:
+      - interx-worker
+
+  worker-sai-cosmos-interaction:
+    build:
+      context: ./cosmos/sai-cosmos-interaction
+      dockerfile: Dockerfile
+    expose:
+      - "8884:8884"
+    volumes:
+      - ./cosmos/sai-cosmos-interaction/config.yml:/srv/config.yml
+      - ./cosmos/sai-cosmos-interaction/kira19g3ueqj45wv0pqngeu0hcysjksns76r2nrz63u:/srv/kira19g3ueqj45wv0pqngeu0hcysjksns76r2nrz63u
+    networks:
+      - interx-worker
+
+  worker-sai-storage:
+    build:
+      context: ./sai-storage-mongo
+      dockerfile: Dockerfile
+    expose:
+      - "8880:8880"
+    depends_on:
+      - worker-mongo-db
+    volumes:
+      - ./sai-storage-mongo/config.yml:/srv/config.yml
+    networks:
+      - interx-worker
+
+  worker-mongo-db:
+    image: mongo:latest
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - interx-worker
+
+volumes:
+  mongo_data:
+
+networks:
+  interx-worker:
+    name: interx_default
+    external: true
