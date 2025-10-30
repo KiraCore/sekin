@@ -46,18 +46,18 @@ func GetVerifiedGenesisFile(ctx context.Context, ip, sekaidRPCPort, interxPort s
 	log.Debug("Retrieved genesis file from sekaid", zap.ByteString("genesisSekaid", genesisSekaid))
 
 	// Get genesis file from Interx daemon
-	// genesisInterx, err := GetInterxGenesis(ctx, ip, interxPort)
-	// if err != nil {
-	// 	log.Error("Failed to get genesis file from interx", zap.String("IP", ip), zap.String("Port", interxPort), zap.Error(err))
-	// 	return nil, fmt.Errorf("failed to get interx genesis: %w", err)
-	// }
-	// log.Debug("Retrieved genesis file from interx", zap.ByteString("genesisInterx", genesisInterx))
+	genesisInterx, err := GetInterxGenesis(ctx, ip, interxPort)
+	if err != nil {
+		log.Error("Failed to get genesis file from interx", zap.String("IP", ip), zap.String("Port", interxPort), zap.Error(err))
+		return nil, fmt.Errorf("failed to get interx genesis: %w", err)
+	}
+	log.Debug("Retrieved genesis file from interx", zap.ByteString("genesisInterx", genesisInterx))
 
 	// // Check if both genesis files are the same
-	// if err := checkFileContentGenesisFiles(genesisInterx, genesisSekaid); err != nil {
-	// 	log.Error("Genesis files content mismatch", zap.Error(err))
-	// 	return nil, fmt.Errorf("genesis files content mismatch: %w", err)
-	// }
+	if err := checkFileContentGenesisFiles(genesisInterx, genesisSekaid); err != nil {
+		log.Error("Genesis files content mismatch", zap.Error(err))
+		return nil, fmt.Errorf("genesis files content mismatch: %w", err)
+	}
 	log.Info("Genesis files content verified as matching")
 
 	// // // Additional checksum verification
@@ -65,11 +65,11 @@ func GetVerifiedGenesisFile(ctx context.Context, ip, sekaidRPCPort, interxPort s
 	// 	log.Error("Checksum verification failed", zap.Error(err))
 	// 	return nil, fmt.Errorf("checksum verification failed: %w", err)
 	// }
-	// log.Info("Checksum verification passed")
+	log.Info("Checksum verification passed")
 
 	log.Info("Genesis file verified successfully")
-	// return genesisInterx, nil
-	return genesisSekaid, nil
+	return genesisInterx, nil
+	// return genesisSekaid, nil
 
 }
 
