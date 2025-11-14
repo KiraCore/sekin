@@ -45,7 +45,7 @@ worker/ethereum/sai-ethereum-contract-interaction/*
 
 # Ignore everything in sekai except configs
 sekai/*
-sekai/config/*
+!sekai/config/*
 
 # Ignore everyting in interx
 interx/*
