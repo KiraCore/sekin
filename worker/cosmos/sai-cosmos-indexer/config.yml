@@ -8,7 +8,7 @@ common:
 
 storage:
   token: "12345"
-  url: "http://localhost:8880"
+  url: "http://storage.local:8880"
   email: "email"
   password: "pass"
   mongo_collection_name: "Ethereum"

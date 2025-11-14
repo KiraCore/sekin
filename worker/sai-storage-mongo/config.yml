@@ -11,7 +11,7 @@ common:
     port: 8881
 storage:
   atlas: false
-  host: "sekin-mongo-1"
+  host: "mongo.local"
   port: "27017"
   user: ""
   pass: ""

@@ -21,7 +21,7 @@
 		"storage": {
 			"collection": "Ethereum",
 			"token": "12345",
-			"url": "http://localhost:8880",
+			"url": "http://storage.local:8880",
 			"email": "",
 			"password": ""
 		},
