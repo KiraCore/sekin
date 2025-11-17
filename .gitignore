@@ -25,6 +25,7 @@ worker/cosmos/*
 !worker/cosmos/sai-cosmos-indexer/
 worker/cosmos/sai-cosmos-indexer/*
 !worker/cosmos/sai-cosmos-indexer/config.yml
+worker/cosmos/sai-cosmos-indexer/latest_handled_block
 
 !worker/cosmos/sai-cosmos-interaction/
 worker/cosmos/sai-cosmos-interaction/*

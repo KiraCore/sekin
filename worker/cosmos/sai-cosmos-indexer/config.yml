@@ -7,17 +7,20 @@ common:
     port: 8081
 
 storage:
-  token: "12345"
+  token: ""
   url: "http://storage.local:8880"
-  email: "email"
-  password: "pass"
-  mongo_collection_name: "Ethereum"
+  email: ""
+  password: ""
+  mongo_collection_name: "cosmos"
 notifier:
   token: "lafijsiadnm/a@@#lsa$fd8f"
   url: "http://localhost:8885"
   sender_id: "Cosmos"
 
 node_address: "http://sekai.local:26657"
-start_block: 857
+start_block: 1
 tx_type: "/kira.bridge.MsgChangeCosmosEthereum"
 sleep_duration: 2
+handle_blocks: true
+skip_faile_tx: false
+

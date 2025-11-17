@@ -88,8 +88,6 @@ services:
         syslog-address: "udp://10.1.0.2:514"
         syslog-facility: local0
         tag: "storage"
-    ports:
-      - "8880:8880"
     expose:
       - "8880"
     volumes:
@@ -111,11 +109,10 @@ services:
         syslog-address: "udp://10.1.0.2:514"
         syslog-facility: local0
         tag: "cosmos-indexer"
-    ports:
-      - "8883:8883"
     expose:
       - "8883"
     volumes:
+      - "./worker/cosmos/sai-cosmos-indexer/latest_handled_block:/srv/latest_handled_block"
       - "./worker/cosmos/sai-cosmos-indexer/config.yml:/srv/config.yml"
     networks:
       kiranet:
@@ -134,8 +131,6 @@ services:
         syslog-address: "udp://10.1.0.2:514"
         syslog-facility: local0
         tag: "cosmos-interaction"
-    ports:
-      - "8884:8884"
     expose:
       - "8884"
     volumes:
@@ -158,8 +153,6 @@ services:
         syslog-address: "udp://10.1.0.2:514"
         syslog-facility: local0
         tag: "ethereum-indexer"
-    ports:
-      - "8881:8881"
     expose:
       - "8881"
     volumes:
@@ -183,8 +176,6 @@ services:
         syslog-address: "udp://10.1.0.2:514"
         syslog-facility: local0
         tag: "ethereum-interaction"
-    ports:
-      - "8882:8882"
     expose:
       - "8882"
     volumes:
@@ -246,9 +237,9 @@ services:
       - PGID=0
     volumes:
       - ./syslog-data:/var/log
-    ports:
-      - "127.0.0.1:514:514/udp"
-      - "127.0.0.1:514:514"
+    expose:
+      - "514/udp"
+      - "514"
     networks:
       kiranet:
         ipv4_address: 10.1.0.2
