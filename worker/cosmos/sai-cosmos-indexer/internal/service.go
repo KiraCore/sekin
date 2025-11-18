@@ -99,6 +99,43 @@ func (is *InternalService) Init() {
 	if is.currentBlock < startBlock {
 		is.currentBlock = startBlock
 	}
+
+	err = is.ensureIndexes()
+	if err != nil {
+		logger.Logger.Error("ensureIndexes", zap.Error(err))
+	}
+}
+
+func (is *InternalService) ensureIndexes() error {
+	// Create index on block_id.hash for efficient upsert operations
+	storageRequest := adapter.Request{
+		Method: "create_indexes",
+		Data: adapter.CreateIndexesRequest{
+			Collection: is.storageConfig.Collection + "_blocks",
+			Data: []interface{}{
+				map[string]interface{}{
+					"keys": []map[string]interface{}{
+						{"block_id.hash": 1},
+					},
+					"unique": false,
+				},
+			},
+		},
+	}
+
+	bodyBytes, err := jsoniter.Marshal(&storageRequest)
+	if err != nil {
+		return err
+	}
+
+	_, err = utils.SaiQuerySender(bytes.NewBuffer(bodyBytes), is.storageConfig.Url, is.storageConfig.Token)
+	if err != nil {
+		return err
+	}
+
+	logger.Logger.Info("Indexes ensured for collection", zap.String("collection", is.storageConfig.Collection+"_blocks"))
+
+	return nil
 }
 
 func (is *InternalService) Process() {

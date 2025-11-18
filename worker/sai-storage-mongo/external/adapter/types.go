@@ -73,6 +73,11 @@ type DeleteRequest struct {
 	Select     map[string]interface{} `json:"select,omitempty" validate:"required"`
 }
 
+type CreateIndexesRequest struct {
+	Collection string        `json:"collection" validate:"required"`
+	Data       []interface{} `json:"data,omitempty" validate:"required"`
+}
+
 func (r ReadRequest) GetCollection() string {
 	return r.Collection
 }
@@ -190,5 +195,25 @@ func (r DeleteRequest) GetOptions() *Options {
 }
 
 func (r DeleteRequest) GetIncludeFields() []string {
+	return nil
+}
+
+func (r CreateIndexesRequest) GetCollection() string {
+	return r.Collection
+}
+
+func (r CreateIndexesRequest) GetSelect() map[string]interface{} {
+	return nil
+}
+
+func (r CreateIndexesRequest) GetData() []interface{} {
+	return r.Data
+}
+
+func (r CreateIndexesRequest) GetOptions() *Options {
+	return nil
+}
+
+func (r CreateIndexesRequest) GetIncludeFields() []string {
 	return nil
 }
