@@ -426,6 +426,7 @@ docker system prune -a --volumes
 - Monitor logs for suspicious activity
 - Use strong passwords for MongoDB
 - Rotate signing keys periodically
+- Enable prometheus API to connect monitoring
 
 ## Contributing
 
