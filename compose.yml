@@ -208,7 +208,7 @@ services:
   shidai:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/shidai:v0.15.2
+    image: ghcr.io/kiracore/sekin/shidai:v0.16.0
     restart: always
     ports:
       - "127.0.0.1:8282:8282"
@@ -225,7 +225,7 @@ services:
     hostname: shidai.local
 
   syslog-ng:
-    image: ghcr.io/kiracore/sekin/syslog-ng:v0.15.2
+    image: ghcr.io/kiracore/sekin/syslog-ng:v0.16.0
     restart: always
     healthcheck:
       test: ["CMD", "pgrep", "syslog-ng"]
