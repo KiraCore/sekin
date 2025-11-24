@@ -34,7 +34,7 @@ services:
   manager:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/interx/manager:vv0.10.3
+    image: ghcr.io/kiracore/interx/manager:v0.10.3
     restart: always
     logging:
       driver: syslog
@@ -57,7 +57,7 @@ services:
   proxy:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/interx/proxy:vv0.10.3
+    image: ghcr.io/kiracore/interx/proxy:v0.10.3
     restart: always
     logging:
       driver: syslog
@@ -80,7 +80,7 @@ services:
     depends_on:
       - syslog-ng
       - mongo
-    image: ghcr.io/kiracore/interx/storage:vv0.10.3
+    image: ghcr.io/kiracore/interx/storage:v0.10.3
     restart: always
     logging:
       driver: syslog
@@ -101,7 +101,7 @@ services:
   cosmos-indexer:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/interx/cosmos-indexer:vv0.10.3
+    image: ghcr.io/kiracore/interx/cosmos-indexer:v0.10.3
     restart: always
     logging:
       driver: syslog
@@ -123,7 +123,7 @@ services:
   cosmos-interaction:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/interx/cosmos-interaction:vv0.10.3
+    image: ghcr.io/kiracore/interx/cosmos-interaction:v0.10.3
     restart: always
     logging:
       driver: syslog
@@ -145,7 +145,7 @@ services:
   ethereum-indexer:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/interx/ethereum-indexer:vv0.10.3
+    image: ghcr.io/kiracore/interx/ethereum-indexer:v0.10.3
     restart: always
     logging:
       driver: syslog
@@ -168,7 +168,7 @@ services:
   ethereum-interaction:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/interx/ethereum-interaction:vv0.10.3
+    image: ghcr.io/kiracore/interx/ethereum-interaction:v0.10.3
     restart: always
     logging:
       driver: syslog
