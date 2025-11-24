@@ -68,12 +68,16 @@ jobs:
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
           git add compose.yml
-          git commit -m "feat(ci/cd): Update interx microservices to ${{ env.VERSION }}" \
-                     -m "* Update manager image to ${{ env.VERSION }}" \
-                     -m "* Update proxy image to ${{ env.VERSION }}" \
-                     -m "* Update storage image to ${{ env.VERSION }}" \
-                     -m "* Update cosmos-indexer image to ${{ env.VERSION }}" \
-                     -m "* Update cosmos-interaction image to ${{ env.VERSION }}" \
-                     -m "* Update ethereum-indexer image to ${{ env.VERSION }}" \
-                     -m "* Update ethereum-interaction image to ${{ env.VERSION }}"
-          git push
+          if git diff --cached --quiet; then
+            echo "No changes to commit - compose.yml already up to date with ${{ env.VERSION }}"
+          else
+            git commit -m "feat(ci/cd): Update interx microservices to ${{ env.VERSION }}" \
+                       -m "* Update manager image to ${{ env.VERSION }}" \
+                       -m "* Update proxy image to ${{ env.VERSION }}" \
+                       -m "* Update storage image to ${{ env.VERSION }}" \
+                       -m "* Update cosmos-indexer image to ${{ env.VERSION }}" \
+                       -m "* Update cosmos-interaction image to ${{ env.VERSION }}" \
+                       -m "* Update ethereum-indexer image to ${{ env.VERSION }}" \
+                       -m "* Update ethereum-interaction image to ${{ env.VERSION }}"
+            git push
+          fi
