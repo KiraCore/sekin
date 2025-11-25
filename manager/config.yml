@@ -8,9 +8,9 @@ common:
 
 storage:
   token: ""
-  url: "http://sekin-storage-1:8880"
+  url: "http://storage.local:8880"
 ethereum:
-  interaction: "http://sekin-ethereum-interaction-1:8882"
+  interaction: "http://ethereum-interaction.local:8882"
   nodes:
     chain1: "https://data-seed-prebsc-1-s1.bnbchain.org:8545"
   token: ""
@@ -26,7 +26,7 @@ cosmos:
     async: true
     block: true
   gw_timeout: 30
-  interaction: "http://sekin-cosmos-interaction-1:8884"
+  interaction: "http://cosmos-interaction.local:8884"
   token: ""
   retries: 1
   retry_delay: 10

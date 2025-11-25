@@ -19,7 +19,7 @@ notifier:
 
 node_address: "http://sekai.local:26657"
 start_block: 1
-tx_type: "/kira.bridge.MsgChangeCosmosEthereum"
+tx_type: ""
 sleep_duration: 2
 handle_blocks: true
 skip_faile_tx: false

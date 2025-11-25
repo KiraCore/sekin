@@ -7,4 +7,4 @@ common:
     port: 8881
 
 manager:
-  url: http://manager:8080
+  url: http://manager.local:8080

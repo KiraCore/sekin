@@ -49,7 +49,7 @@ services:
       kiranet:
         ipv4_address: 10.1.0.4
     volumes:
-      - "./manager/config.yml:/srv/config.yml"
+      # - "./manager/config.yml:/srv/config.yml"  # Optional: uncomment to override default config
       - "./manager/logs:/srv/logs"
     hostname: manager.local
 
@@ -71,7 +71,7 @@ services:
       kiranet:
         ipv4_address: 10.1.0.10
     volumes:
-      - "./proxy/config.yml:/srv/config.yml"
+      # - "./proxy/config.yml:/srv/config.yml"  # Optional: uncomment to override default config
       - "./proxy/logs:/srv/logs"
     hostname: proxy.local
 
@@ -90,8 +90,8 @@ services:
         tag: "storage"
     expose:
       - "8880"
-    volumes:
-      - "./worker/sai-storage-mongo/config.yml:/srv/config.yml"
+    # volumes:
+      # - "./worker/sai-storage-mongo/config.yml:/srv/config.yml"  # Optional: uncomment to override default config
     networks:
       kiranet:
         ipv4_address: 10.1.0.11
@@ -113,7 +113,7 @@ services:
       - "8883"
     volumes:
       - "./worker/cosmos/sai-cosmos-indexer/latest_handled_block:/srv/latest_handled_block"
-      - "./worker/cosmos/sai-cosmos-indexer/config.yml:/srv/config.yml"
+      # - "./worker/cosmos/sai-cosmos-indexer/config.yml:/srv/config.yml"  # Optional: uncomment to override default config
     networks:
       kiranet:
         ipv4_address: 10.1.0.12
@@ -134,7 +134,7 @@ services:
     expose:
       - "8884"
     volumes:
-      - "./worker/cosmos/sai-cosmos-interaction/config.yml:/srv/config.yml"
+      # - "./worker/cosmos/sai-cosmos-interaction/config.yml:/srv/config.yml"  # Optional: uncomment to override default config
       - "./worker/cosmos/sai-cosmos-interaction/kira19g3ueqj45wv0pqngeu0hcysjksns76r2nrz63u:/srv/kira19g3ueqj45wv0pqngeu0hcysjksns76r2nrz63u"
     networks:
       kiranet:
@@ -157,7 +157,7 @@ services:
       - "8881"
     volumes:
       - "./worker/ethereum/sai-ethereum-indexer/block.data:/srv/block.data"
-      - "./worker/ethereum/sai-ethereum-indexer/config.json:/srv/config.json"
+      # - "./worker/ethereum/sai-ethereum-indexer/config.json:/srv/config.json"  # Optional: uncomment to override default config
       - "./worker/ethereum/sai-ethereum-indexer/contracts.json:/srv/contracts.json"
     networks:
       kiranet:
@@ -179,7 +179,7 @@ services:
     expose:
       - "8882"
     volumes:
-      - "./worker/ethereum/sai-ethereum-contract-interaction/config.yml:/srv/config.yml"
+      # - "./worker/ethereum/sai-ethereum-contract-interaction/config.yml:/srv/config.yml"  # Optional: uncomment to override default config
       - "./worker/ethereum/sai-ethereum-contract-interaction/contracts.json:/srv/contracts.json"
     networks:
       kiranet:
