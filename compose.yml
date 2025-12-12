@@ -19,8 +19,8 @@ services:
       - "0.0.0.0:26657:26657"             # RPC (use 127.0.0.1:26657:26657 to disable external connections)
       # - "127.0.0.1:26657:26657"         # RPC (uncomment to disable external connections, comment line above)
       - "26656:26656"                     # P2P (gRPC)
+      # - "127.0.0.1:26659:26659"         # TMKMS remote signer (uncomment for external TMKMS)
       - "127.0.0.1:26660:26660"           # Prometheus
-      - "127.0.0.1:8181:8080"             # RPC sCaller
       - "127.0.0.1:1317:1317"             # REST API
       - "127.0.0.1:9090:9090"             # gRPC
 
@@ -204,25 +204,6 @@ services:
       kiranet:
         ipv4_address: 10.1.0.16
     hostname: mongo.local
-
-  shidai:
-    depends_on:
-      - syslog-ng
-    image: ghcr.io/kiracore/sekin/shidai:v0.16.0
-    restart: always
-    ports:
-      - "127.0.0.1:8282:8282"
-    volumes:
-      - ./sekai:/sekai
-      - ./interx:/interx
-      - ./syslog-data:/syslog-data
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./shidai:/shidaid
-      - ./tmp:/tmp
-    networks:
-      kiranet:
-        ipv4_address: 10.1.0.5
-    hostname: shidai.local
 
   syslog-ng:
     image: ghcr.io/kiracore/sekin/syslog-ng:v0.16.0

@@ -3,27 +3,23 @@ services:
   sekai:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/sekai:v0.4.13
-    restart: always
-    logging:
-      driver: syslog
-      options:
-        syslog-address: "udp://10.1.0.2:514"
-        syslog-facility: local0
-        tag: "sekai"
+    build:
+      context: ./
+      dockerfile: sekai.Dockerfile
+    restart: "no"
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
     volumes:
       - ./tmp:/tmp
       - ./sekai:/sekai
     ports:
       - "26658:26658"           # ABCI
       - "26657:26657"           # RPC
-      - "26656:26656"           # P2P (gRPC)
+      - "26656:26656"           # P2P
+      # - "26659:26659"         # TMKMS remote signer (uncomment for external TMKMS)
       - "26660:26660"           # Prometheus
-      - "8181:8080"             # RPC sCaller
       - "1317:1317"             # REST API
       - "9090:9090"             # gRPC
-
-
     networks:
       kiranet:
         ipv4_address: 10.1.0.3
@@ -203,26 +199,28 @@ services:
         ipv4_address: 10.1.0.16
     hostname: mongo.local
 
-  shidai:
+  # TMKMS - Remote validator signing (optional)
+  tmkms:
     depends_on:
       - syslog-ng
     build:
       context: ./
-      dockerfile: shidai.Dockerfile
+      dockerfile: tmkms.Dockerfile
     restart: always
-    ports:
-      - "127.0.0.1:8282:8282"
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "tmkms"
     volumes:
-      - ./sekai:/sekai
-      - ./interx:/interx
-      - ./syslog-data:/syslog-data
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./shidai:/shidaid
-      - ./tmp:/tmp
+      - ./tmkms/tmkms.toml:/tmkms/tmkms.toml:ro
+      - ./tmkms/secrets:/tmkms/secrets:ro
+      - ./tmkms/state:/tmkms/state
     networks:
       kiranet:
-        ipv4_address: 10.1.0.5
-    hostname: shidai.local
+        ipv4_address: 10.1.0.20
+    hostname: tmkms.local
 
   syslog-ng:
     build:
