@@ -1,16 +1,21 @@
-#!/bin/env bash
+#!/bin/bash
+# Add an account to genesis with initial token allocation
+# Usage: ./03-sekaid-add-genesis-account.sh [KEY_NAME] [COINS]
+#
+# Optional:
+#   KEY_NAME          Name of the key to add (default: genesis)
+#   COINS             Initial coin allocation (default: 300000000000000ukex)
+#   KEYRING_BACKEND   Keyring backend: test|file|os (default: test)
 
-curl -X POST http://localhost:8181/api/execute -H "Content-Type: application/json" \
--d '{
-    "command": "add-genesis-account",
-    "args": {
-        "address": "genesis",
-        "coins": ["300000000000000ukex"],
-        "keyring-backend": "test",
-        "home": "/sekai",
-        "log_format": "",  
-        "log_level": "",   
-        "trace": false     
-    }
-}'
+set -e
 
+KEY_NAME="${1:-genesis}"
+COINS="${2:-300000000000000ukex}"
+KEYRING_BACKEND="${KEYRING_BACKEND:-test}"
+HOME_DIR="${HOME_DIR:-/sekai}"
+
+echo "Adding genesis account '${KEY_NAME}' with ${COINS}"
+
+docker compose exec sekai sekaid add-genesis-account "${KEY_NAME}" "${COINS}" \
+    --keyring-backend "${KEYRING_BACKEND}" \
+    --home "${HOME_DIR}"
