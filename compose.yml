@@ -19,6 +19,7 @@ services:
       - "0.0.0.0:26657:26657"             # RPC (use 127.0.0.1:26657:26657 to disable external connections)
       # - "127.0.0.1:26657:26657"         # RPC (uncomment to disable external connections, comment line above)
       - "26656:26656"                     # P2P (gRPC)
+      # - "127.0.0.1:26659:26659"         # TMKMS remote signer (uncomment for external TMKMS)
       - "127.0.0.1:26660:26660"           # Prometheus
       - "127.0.0.1:1317:1317"             # REST API
       - "127.0.0.1:9090:9090"             # gRPC

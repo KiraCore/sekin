@@ -1,0 +1,31 @@
+# TMKMS Configuration for KIRA Network
+# Copy this file to tmkms.toml and configure as needed
+#
+# Key Generation:
+#   docker run --rm -v ./tmkms/secrets:/out tmkms:test softsign keygen /out/priv_validator_key.json
+#   docker run --rm -v ./tmkms/secrets:/out tmkms:test init /out -n kira
+#
+# Note: This generates both the consensus key and KMS identity key
+
+## Chain Configuration
+[[chain]]
+id = "chaosnet-3"
+key_format = { type = "bech32", account_key_prefix = "kirapub", consensus_key_prefix = "kiravalconspub" }
+state_file = "/tmkms/state/chaosnet-3-consensus.json"
+
+## Signing Provider Configuration - Software Signer
+[[providers.softsign]]
+chain_ids = ["chaosnet-3"]
+key_type = "consensus"
+path = "/tmkms/secrets/priv_validator_key.json"
+
+## Validator Configuration
+[[validator]]
+chain_id = "chaosnet-3"
+# Address of sekaid node's priv_validator_laddr
+# For Docker network: tcp://sekai.local:26659
+# For WireGuard: tcp://<wireguard-ip>:26659
+addr = "tcp://sekai.local:26659"
+secret_key = "/tmkms/secrets/kms-identity.key"
+protocol_version = "v0.38"
+reconnect = true

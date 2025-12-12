@@ -13,9 +13,13 @@ var rootCmd = &cobra.Command{
 	Long: `scaller is a CLI tool for initializing and starting sekaid.
 
 Commands:
-  wait   - Wait indefinitely (container entrypoint)
-  join   - Initialize node and join network
-  start  - Start sekaid (replaces this process)`,
+  wait                - Wait indefinitely (container entrypoint)
+  init                - Initialize new sekaid node
+  keys-add            - Add key to keyring
+  add-genesis-account - Add account to genesis
+  gentx-claim         - Claim validator role in genesis
+  join                - Initialize node and join existing network
+  start               - Start sekaid (replaces this process)`,
 }
 
 func Execute() error {
@@ -24,6 +28,10 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(waitCmd)
+	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(keysAddCmd)
+	rootCmd.AddCommand(addGenesisAccountCmd)
+	rootCmd.AddCommand(gentxClaimCmd)
 	rootCmd.AddCommand(joinCmd)
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(versionCmd)

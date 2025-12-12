@@ -33,15 +33,16 @@ Example:
 }
 
 var (
-	joinRPCNode     string
-	joinHome        string
-	joinMoniker     string
-	joinChainID     string
-	joinStateSync   bool
-	joinPrune       string
-	joinConfigFile  string
-	joinAutoStart   bool
-	joinSnapshotInt int64
+	joinRPCNode      string
+	joinHome         string
+	joinMoniker      string
+	joinChainID      string
+	joinStateSync    bool
+	joinPrune        string
+	joinConfigFile   string
+	joinAutoStart    bool
+	joinSnapshotInt  int64
+	joinRemoteSigner bool
 )
 
 func init() {
@@ -54,23 +55,31 @@ func init() {
 	joinCmd.Flags().StringVar(&joinConfigFile, "config", "", "Path to scall.toml for additional overrides")
 	joinCmd.Flags().BoolVar(&joinAutoStart, "start", true, "Auto-start sekaid after join")
 	joinCmd.Flags().Int64Var(&joinSnapshotInt, "snapshot-interval", 1000, "Snapshot interval for statesync trust height calculation")
+	joinCmd.Flags().BoolVar(&joinRemoteSigner, "remote-signer", false, "Enable remote signer mode (TMKMS)")
 
 	joinCmd.MarkFlagRequired("rpc-node")
 }
 
 func runJoin(cmd *cobra.Command, args []string) {
-	// 1. Read mnemonic from stdin
-	Log("Reading mnemonic from stdin...")
-	mnemonic, err := readMnemonicFromStdin()
-	if err != nil {
-		Fatal("Failed to read mnemonic: %v", err)
-	}
+	var mnemonic string
+	var err error
 
-	// Validate mnemonic
-	if !bip39.IsMnemonicValid(mnemonic) {
-		Fatal("Invalid mnemonic")
+	// 1. Read mnemonic from stdin (skip if remote signer mode)
+	if !joinRemoteSigner {
+		Log("Reading mnemonic from stdin...")
+		mnemonic, err = readMnemonicFromStdin()
+		if err != nil {
+			Fatal("Failed to read mnemonic: %v", err)
+		}
+
+		// Validate mnemonic
+		if !bip39.IsMnemonicValid(mnemonic) {
+			Fatal("Invalid mnemonic")
+		}
+		Log("Mnemonic validated")
+	} else {
+		Log("Remote signer mode enabled - skipping mnemonic input")
 	}
-	Log("Mnemonic validated")
 
 	// 2. Initialize sekaid
 	Log("Initializing sekaid...")
@@ -78,10 +87,20 @@ func runJoin(cmd *cobra.Command, args []string) {
 		Fatal("Failed to initialize sekaid: %v", err)
 	}
 
-	// 3. Add validator key from mnemonic
-	Log("Adding validator key...")
-	if err := addValidatorKey(joinHome, mnemonic); err != nil {
-		Fatal("Failed to add validator key: %v", err)
+	// 3. Add validator key from mnemonic (skip if remote signer mode)
+	if !joinRemoteSigner {
+		Log("Adding validator key...")
+		if err := addValidatorKey(joinHome, mnemonic); err != nil {
+			Fatal("Failed to add validator key: %v", err)
+		}
+	} else {
+		// Remove priv_validator_key.json created by init (key lives in TMKMS)
+		privKeyPath := filepath.Join(joinHome, "config", "priv_validator_key.json")
+		if err := os.Remove(privKeyPath); err != nil && !os.IsNotExist(err) {
+			Log("Warning: Failed to remove priv_validator_key.json: %v", err)
+		} else {
+			Log("Removed priv_validator_key.json (key managed by TMKMS)")
+		}
 	}
 
 	// 4. Fetch genesis
@@ -115,10 +134,18 @@ func runJoin(cmd *cobra.Command, args []string) {
 		Log("Statesync configured: height=%d hash=%s", ssConfig.TrustHeight, ssConfig.TrustHash)
 	}
 
-	// 7. Configure pruning
+	// 7. Configure remote signer if enabled (TMKMS)
+	if joinRemoteSigner {
+		Log("Configuring remote signer mode...")
+		// Listen for remote signer connections on port 26659
+		scall.SetValue("config.priv_validator_laddr", "tcp://0.0.0.0:26659")
+		Log("Remote signer listening on tcp://0.0.0.0:26659")
+	}
+
+	// 8. Configure pruning
 	applyPruningConfig(scall, joinPrune)
 
-	// 8. Load additional overrides from scall.toml if provided
+	// 9. Load additional overrides from scall.toml if provided
 	if joinConfigFile != "" {
 		Log("Loading config overrides from %s...", joinConfigFile)
 		fileConfig, err := config.LoadScall(joinConfigFile)
@@ -131,7 +158,7 @@ func runJoin(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// 9. Apply config overrides
+	// 10. Apply config overrides
 	configTomlPath := filepath.Join(joinHome, "config", "config.toml")
 	appTomlPath := filepath.Join(joinHome, "config", "app.toml")
 
@@ -145,7 +172,7 @@ func runJoin(cmd *cobra.Command, args []string) {
 
 	Log("Node configured successfully")
 
-	// 10. Start if requested
+	// 11. Start if requested
 	if joinAutoStart {
 		Log("Starting sekaid...")
 		runStart(nil, nil)

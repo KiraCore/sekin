@@ -7,6 +7,8 @@ services:
       context: ./
       dockerfile: sekai.Dockerfile
     restart: "no"
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
     volumes:
       - ./tmp:/tmp
       - ./sekai:/sekai
@@ -14,6 +16,7 @@ services:
       - "26658:26658"           # ABCI
       - "26657:26657"           # RPC
       - "26656:26656"           # P2P
+      # - "26659:26659"         # TMKMS remote signer (uncomment for external TMKMS)
       - "26660:26660"           # Prometheus
       - "1317:1317"             # REST API
       - "9090:9090"             # gRPC
@@ -195,6 +198,29 @@ services:
       kiranet:
         ipv4_address: 10.1.0.16
     hostname: mongo.local
+
+  # TMKMS - Remote validator signing (optional)
+  tmkms:
+    depends_on:
+      - syslog-ng
+    build:
+      context: ./
+      dockerfile: tmkms.Dockerfile
+    restart: always
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "udp://10.1.0.2:514"
+        syslog-facility: local0
+        tag: "tmkms"
+    volumes:
+      - ./tmkms/tmkms.toml:/tmkms/tmkms.toml:ro
+      - ./tmkms/secrets:/tmkms/secrets:ro
+      - ./tmkms/state:/tmkms/state
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.20
+    hostname: tmkms.local
 
   syslog-ng:
     build:
