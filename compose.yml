@@ -3,7 +3,7 @@ services:
   sekai:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/sekai:v0.4.13
+    image: ghcr.io/kiracore/sekin/sekai:v0.18.0
     restart: always
     logging:
       driver: syslog
@@ -206,7 +206,7 @@ services:
     hostname: mongo.local
 
   syslog-ng:
-    image: ghcr.io/kiracore/sekin/syslog-ng:v0.16.0
+    image: ghcr.io/kiracore/sekin/syslog-ng:v0.18.0
     restart: always
     healthcheck:
       test: ["CMD", "pgrep", "syslog-ng"]
