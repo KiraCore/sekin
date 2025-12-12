@@ -3,27 +3,20 @@ services:
   sekai:
     depends_on:
       - syslog-ng
-    image: ghcr.io/kiracore/sekin/sekai:v0.4.13
-    restart: always
-    logging:
-      driver: syslog
-      options:
-        syslog-address: "udp://10.1.0.2:514"
-        syslog-facility: local0
-        tag: "sekai"
+    build:
+      context: ./
+      dockerfile: sekai.Dockerfile
+    restart: "no"
     volumes:
       - ./tmp:/tmp
       - ./sekai:/sekai
     ports:
       - "26658:26658"           # ABCI
       - "26657:26657"           # RPC
-      - "26656:26656"           # P2P (gRPC)
+      - "26656:26656"           # P2P
       - "26660:26660"           # Prometheus
-      - "8181:8080"             # RPC sCaller
       - "1317:1317"             # REST API
       - "9090:9090"             # gRPC
-
-
     networks:
       kiranet:
         ipv4_address: 10.1.0.3
@@ -202,27 +195,6 @@ services:
       kiranet:
         ipv4_address: 10.1.0.16
     hostname: mongo.local
-
-  shidai:
-    depends_on:
-      - syslog-ng
-    build:
-      context: ./
-      dockerfile: shidai.Dockerfile
-    restart: always
-    ports:
-      - "127.0.0.1:8282:8282"
-    volumes:
-      - ./sekai:/sekai
-      - ./interx:/interx
-      - ./syslog-data:/syslog-data
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./shidai:/shidaid
-      - ./tmp:/tmp
-    networks:
-      kiranet:
-        ipv4_address: 10.1.0.5
-    hostname: shidai.local
 
   syslog-ng:
     build:

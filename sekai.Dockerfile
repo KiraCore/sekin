@@ -1,4 +1,4 @@
-# Build app
+# Build sekaid
 FROM ubuntu:20.04 AS sekai-builder
 
 # Avoid prompts from apt
@@ -19,31 +19,29 @@ ENV PATH="$PATH:/usr/local/go/bin"
 # Cloning sekai repo and install
 RUN git clone -c http.postBuffer=1048576000 --depth 1 https://github.com/kiracore/sekai.git /bsekai && \
     cd /bsekai && \
-    make build-static 
+    make build-static
 
-FROM golang:1.22 AS caller-builder
+# Build scaller (CLI tool)
+FROM golang:1.22 AS scaller-builder
 
-WORKDIR /api
+WORKDIR /app
 
-COPY ./src/sCaller /api
+COPY ./src/sCaller /app
 
-RUN go mod tidy && CGO_ENABLED=0 go build -a -tags netgo -installsuffix cgo -o /sekaidCaller ./cmd/main.go
+RUN go mod tidy && CGO_ENABLED=0 go build -a -tags netgo -installsuffix cgo -o /scaller ./cmd/main.go
 
-
-# Run app
-FROM scratch
-
-# Avoid prompts from apt
-ARG DEBIAN_FRONTEND=noninteractive
+# Final image
+FROM alpine:latest
 
 # Copy artifacts
 COPY --from=sekai-builder /sekaid /sekaid
-COPY --from=caller-builder /sekaidCaller /sekaidCaller 
+COPY --from=scaller-builder /scaller /scaller
 
-# Start sekai
-ENTRYPOINT ["/sekaidCaller"]
+# Entrypoint: wait for docker exec commands
+ENTRYPOINT ["/scaller", "wait"]
 
-# Expose the default Tendermint port
+# Expose Tendermint ports (no HTTP port - CLI only)
 EXPOSE 26657
 EXPOSE 26656
-EXPOSE 8080
+EXPOSE 9090
+EXPOSE 1317
