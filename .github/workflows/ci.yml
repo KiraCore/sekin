@@ -49,15 +49,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push SHIDAI Docker image
+      - name: Build and push SEKAI Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./shidai.Dockerfile
+          file: ./sekai.Dockerfile
           push: true
-          tags: ghcr.io/kiracore/sekin/shidai:${{ steps.create_tag.outputs.new_tag }}
-          build-args: |
-            VERSION=${{ steps.create_tag.outputs.new_tag }}
+          tags: ghcr.io/kiracore/sekin/sekai:${{ steps.create_tag.outputs.new_tag }}
           labels:
             org.opencontainers.image.authors="kira.network"
             org.opencontainers.image.url="https://github.com/KiraCore/sekin"
@@ -65,22 +63,22 @@ jobs:
             org.opencontainers.image.source="https://github.com/KiraCore/sekin.git"
             org.opencontainers.image.vendor="KIRA"
             org.opencontainers.image.licenses="CC BY-NC-SA 4.0."
-            org.opencontainers.image.title="SHIDAI"
-            org.opencontainers.image.description="Infra manager"
+            org.opencontainers.image.title="sekai"
+            org.opencontainers.image.description="KIRA blockchain node with scaller CLI"
 
-      - name: Retrieve SHIDAI image digest
-        id: get-shidai-digest
+      - name: Retrieve SEKAI image digest
+        id: get-sekai-digest
         run: |
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/kiracore/sekin/shidai:${{ steps.create_tag.outputs.new_tag }})
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/kiracore/sekin/sekai:${{ steps.create_tag.outputs.new_tag }})
           echo "Digest: $DIGEST"
-          echo "::set-output name=digest::$DIGEST"
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
-      - name: Sign published SHIDAI Docker image with digest
+      - name: Sign published SEKAI Docker image with digest
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
-          cosign sign --key cosign.key ${{ steps.get-shidai-digest.outputs.digest }} --yes
+          cosign sign --key cosign.key ${{ steps.get-sekai-digest.outputs.digest }} --yes
           dd if=/dev/zero of=cosign.key bs=1 count=$(stat --format=%s cosign.key)
           rm -f cosign.key
 
@@ -106,7 +104,7 @@ jobs:
         run: |
           DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/kiracore/sekin/syslog-ng:${{ steps.create_tag.outputs.new_tag }})
           echo "Digest: $DIGEST"
-          echo "::set-output name=digest::$DIGEST"
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Sign published SYSLOG-NG Docker image with digest
         env:
@@ -119,8 +117,8 @@ jobs:
 
       - name: Update image version in compose.yml
         run: |
-          sed -i "s/syslog-ng:v[0-9]*\.[0-9]*\.[0-9]*/syslog-ng:${{ steps.create_tag.outputs.new_tag }}/g" compose.yml
-          sed -i "s/shidai:v[0-9]*\.[0-9]*\.[0-9]*/shidai:${{ steps.create_tag.outputs.new_tag }}/g" compose.yml
+          sed -i "s|ghcr.io/kiracore/sekin/syslog-ng:v[0-9]*\.[0-9]*\.[0-9]*|ghcr.io/kiracore/sekin/syslog-ng:${{ steps.create_tag.outputs.new_tag }}|g" compose.yml
+          sed -i "s|ghcr.io/kiracore/sekin/sekai:v[0-9]*\.[0-9]*\.[0-9]*|ghcr.io/kiracore/sekin/sekai:${{ steps.create_tag.outputs.new_tag }}|g" compose.yml
 
       - name: Commit and push updated compose.yml
         run: |
