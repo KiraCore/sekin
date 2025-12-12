@@ -51,6 +51,21 @@ sekai/*
 # Ignore everyting in interx
 interx/*
 
-# TMKMS - ignore secrets and state, keep example config
-tmkms/*
-!tmkms/tmkms.toml.example
+# TMKMS - ignore secrets, state, and actual configs; keep examples and compose files
+tmkms/secrets/
+tmkms/state/
+tmkms/tmkms.toml
+tmkms/wireguard/validator/wg0.conf
+tmkms/wireguard/signer/wg0.conf
+tmkms/wireguard/validator/private.key
+tmkms/wireguard/validator/public.key
+tmkms/wireguard/signer/private.key
+tmkms/wireguard/signer/public.key
+
+# Terraform - ignore state and tfvars (contains secrets)
+tmkms/terraform/.terraform/
+tmkms/terraform/.terraform.lock.hcl
+tmkms/terraform/terraform.tfstate
+tmkms/terraform/terraform.tfstate.backup
+tmkms/terraform/terraform.tfvars
+tmkms/terraform/*.key

@@ -1,0 +1,41 @@
+---
+# TMKMS signer with WireGuard tunnel to connect to validator
+# Run this on a SEPARATE machine from the validator
+# Usage:
+#   1. Copy wireguard/signer/wg0.conf.example to wireguard/signer/wg0.conf
+#   2. Update wg0.conf with your keys and validator IP
+#   3. Copy tmkms.toml.example to tmkms.toml
+#   4. Update tmkms.toml: addr = "tcp://10.200.0.1:26659"
+#   5. Place priv_validator_key.json in secrets/
+#   6. docker compose -f tmkms/signer-compose.yml up -d
+
+services:
+  wireguard:
+    image: linuxserver/wireguard:latest
+    restart: always
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./wireguard/signer/wg0.conf:/config/wg_confs/wg0.conf:ro
+    ports:
+      - "51820:51820/udp"
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    hostname: wireguard.local
+
+  tmkms:
+    depends_on:
+      - wireguard
+    build:
+      context: ../
+      dockerfile: tmkms.Dockerfile
+    restart: always
+    network_mode: "service:wireguard"
+    volumes:
+      - ./tmkms.toml:/tmkms/tmkms.toml:ro
+      - ./secrets:/tmkms/secrets:ro
+      - ./state:/tmkms/state

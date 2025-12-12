@@ -1,0 +1,32 @@
+---
+# WireGuard container that connects to existing kiranet from compose.yml
+# Usage:
+#   1. Uncomment port 26659 in compose.yml
+#   2. Copy wireguard/validator/wg0.conf.example to wireguard/validator/wg0.conf
+#   3. Update wg0.conf with your keys and signer IP
+#   4. docker compose -f tmkms/wireguard-compose.yml up -d
+
+services:
+  wireguard:
+    image: linuxserver/wireguard:latest
+    restart: always
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./wireguard/validator/wg0.conf:/config/wg_confs/wg0.conf:ro
+    ports:
+      - "51820:51820/udp"
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      kiranet:
+        ipv4_address: 10.1.0.21
+    hostname: wireguard.local
+
+networks:
+  kiranet:
+    external: true

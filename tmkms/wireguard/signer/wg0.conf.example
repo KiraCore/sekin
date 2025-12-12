@@ -1,0 +1,18 @@
+# WireGuard config for SIGNER machine (TMKMS)
+# Copy to wg0.conf and update with your keys/IPs
+
+[Interface]
+# Signer's WireGuard private key (generate with: wg genkey)
+PrivateKey = <SIGNER_PRIVATE_KEY>
+# WireGuard tunnel IP for signer
+Address = 10.200.0.2/24
+ListenPort = 51820
+
+[Peer]
+# Validator's WireGuard public key (from: echo <VALIDATOR_PRIVATE_KEY> | wg pubkey)
+PublicKey = <VALIDATOR_PUBLIC_KEY>
+# Validator's WireGuard tunnel IP
+AllowedIPs = 10.200.0.1/32
+# Validator machine's public IP (or domain)
+Endpoint = <VALIDATOR_PUBLIC_IP>:51820
+PersistentKeepalive = 25
