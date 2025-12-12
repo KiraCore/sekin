@@ -13,14 +13,14 @@ Sekin orchestrates multiple microservices in a containerized environment:
 │                     Sekin Infrastructure                     │
 ├─────────────────────────────────────────────────────────────┤
 │                                                               │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────────────┐     │
-│  │  Sekai   │  │  Shidai  │  │   Interx Manager      │     │
-│  │ (Cosmos) │  │  (Infra) │  │   (P2P/HTTP Server)   │     │
-│  └────┬─────┘  └────┬─────┘  └───────────┬───────────┘     │
-│       │             │                     │                  │
-│  ┌────┴─────────────┴─────────────────────┴───────────┐     │
-│  │              Centralized Logging (Syslog-ng)       │     │
-│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────┐  ┌───────────────────────┐          │
+│  │  Sekai + Scaller   │  │   Interx Manager      │          │
+│  │  (Cosmos + CLI)    │  │   (P2P/HTTP Server)   │          │
+│  └─────────┬──────────┘  └───────────┬───────────┘          │
+│            │                          │                      │
+│  ┌─────────┴──────────────────────────┴───────────┐         │
+│  │              Centralized Logging (Syslog-ng)   │         │
+│  └────────────────────────────────────────────────┘         │
 │                                                               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
 │  │   Storage    │  │    Proxy     │  │   MongoDB    │      │
@@ -40,18 +40,14 @@ Sekin orchestrates multiple microservices in a containerized environment:
 
 ### Core Services
 
-**Sekai (v0.4.13)**
+**Sekai with Scaller**
 - KIRA blockchain node built on Cosmos SDK
-- Provides consensus, state management, and transaction processing
+- Includes scaller CLI for node bootstrapping and management
+- Scaller provides commands: `join`, `start`, `version`, `wait`
 - Ports: 26657 (RPC), 26656 (P2P), 9090 (gRPC), 1317 (REST API)
+- Built from `sekai.Dockerfile` (contains sekaid + scaller)
 
-**Shidai (v0.15.2)**
-- Infrastructure management and orchestration service
-- Monitors blockchain status and manages container lifecycle
-- Provides API endpoint on port 8282
-- Built from source in `src/shidai/`
-
-**Syslog-ng (v0.15.2)**
+**Syslog-ng**
 - Centralized logging server for all services
 - Collects logs via UDP/TCP on port 514
 - Configured with log rotation and retention policies
@@ -107,7 +103,6 @@ All services run on a custom bridge network `kiranet` (10.1.0.0/16):
 | Syslog-ng            | 10.1.0.2     | syslog-ng.local             |
 | Sekai                | 10.1.0.3     | sekai.local                 |
 | Manager              | 10.1.0.4     | manager.local               |
-| Shidai               | 10.1.0.5     | shidai.local                |
 | Proxy                | 10.1.0.10    | proxy.local                 |
 | Storage              | 10.1.0.11    | storage.local               |
 | Cosmos Indexer       | 10.1.0.12    | cosmos-indexer.local        |
@@ -191,34 +186,18 @@ docker compose logs -f sekai
 tail -f ./syslog-data/sekai.log
 ```
 
-## Building Images Independently
+## Building Images
 
-Apart from using Docker Compose, you can build Sekai and Interx independently.
-
-### Build Sekai
+Build the sekai image (includes sekaid + scaller):
 
 ```bash
-./scripts/docker-sekaid-build.sh v0.4.13
+docker build -f sekai.Dockerfile -t sekai:latest .
 ```
 
-### Build Interx
+Build the syslog-ng image:
 
 ```bash
-./scripts/docker-interxd-build.sh v0.7.0
-```
-
-### Run Containers
-
-**Run Sekai:**
-
-```bash
-./scripts/docker-sekaid-run.sh v0.4.13
-```
-
-**Run Interx:**
-
-```bash
-./scripts/docker-interxd-run.sh v0.7.0
+docker build -f syslog-ng.Dockerfile -t syslog-ng:latest .
 ```
 
 ## Port Mappings
@@ -243,11 +222,9 @@ Apart from using Docker Compose, you can build Sekai and Interx independently.
 |-------|------------|-----------------------------|
 | 26658 | Sekai      | ABCI                        |
 | 26660 | Sekai      | Prometheus Metrics          |
-| 8181  | Sekai      | RPC sCaller                 |
 | 1317  | Sekai      | REST API                    |
 | 9090  | Sekai      | gRPC                        |
 | 8080  | Manager    | HTTP Server                 |
-| 8282  | Shidai     | Infrastructure Manager API  |
 | 514   | Syslog-ng  | Syslog Server (UDP/TCP)     |
 
 ## Configuration
@@ -274,7 +251,7 @@ Sekin uses GitHub Actions for automated image building, signing, and deployment:
 **`ci.yml` - Build and Release**
 - Triggers on PR merge to `main` branch
 - Creates semantic version tags
-- Builds and pushes Shidai and Syslog-ng images to GHCR
+- Builds and pushes Sekai and Syslog-ng images to GHCR
 - Signs images with Cosign (Sigstore)
 - Updates `compose.yml` with new versions
 
@@ -294,7 +271,7 @@ Sekin uses GitHub Actions for automated image building, signing, and deployment:
 All images are signed using Cosign for supply chain security. Verify signatures:
 
 ```bash
-cosign verify --key cosign.pub ghcr.io/kiracore/sekin/shidai:v0.15.2
+cosign verify --key cosign.pub ghcr.io/kiracore/sekin/sekai:latest
 ```
 
 ## Monitoring and Maintenance
@@ -302,11 +279,11 @@ cosign verify --key cosign.pub ghcr.io/kiracore/sekin/shidai:v0.15.2
 ### View Service Status
 
 ```bash
-# Check Shidai status
-curl http://localhost:8282/status
-
 # Check blockchain status via RPC
 curl http://localhost:26657/status
+
+# Check scaller version
+docker compose exec sekai scaller version
 ```
 
 ### Access Logs
@@ -348,11 +325,7 @@ docker compose up -d
 ```
 sekin/
 ├── src/
-│   ├── shidai/          # Infrastructure manager
-│   ├── sCaller/         # Sekai command executor
-│   ├── iCaller/         # Interx command executor
-│   ├── exporter/        # Metrics exporter
-│   └── updater/         # Upgrade manager
+│   └── sCaller/         # Scaller CLI (node bootstrap & management)
 ├── manager/             # Interx Manager (P2P/HTTP)
 ├── proxy/               # Interx Proxy
 ├── worker/              # Interx Worker services
@@ -361,6 +334,8 @@ sekin/
 │   └── sai-storage-mongo/ # Storage service
 ├── scripts/             # Utility scripts
 ├── config/              # Configuration files
+├── sekai.Dockerfile     # Sekai + Scaller image
+├── syslog-ng.Dockerfile # Syslog-ng image
 └── compose.yml          # Production compose file
 ```
 
@@ -369,8 +344,8 @@ sekin/
 Each component can be built independently using its respective Dockerfile:
 
 ```bash
-# Build Shidai
-docker build -f shidai.Dockerfile -t sekin/shidai:custom .
+# Build Sekai (includes scaller CLI)
+docker build -f sekai.Dockerfile -t sekin/sekai:custom .
 
 # Build Syslog-ng
 docker build -f syslog-ng.Dockerfile -t sekin/syslog-ng:custom .
@@ -400,7 +375,7 @@ docker network inspect kiranet
 Check for existing processes using required ports:
 
 ```bash
-sudo netstat -tulpn | grep -E '26657|26656|8080|8282'
+sudo netstat -tulpn | grep -E '26657|26656|8080'
 ```
 
 ### Disk Space
