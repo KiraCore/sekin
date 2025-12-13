@@ -19,7 +19,8 @@ Commands:
   add-genesis-account - Add account to genesis
   gentx-claim         - Claim validator role in genesis
   join                - Initialize node and join existing network
-  start               - Start sekaid (replaces this process)`,
+  start               - Start sekaid (with optional restart)
+  status              - Show node and network status`,
 }
 
 func Execute() error {
@@ -34,6 +35,7 @@ func init() {
 	rootCmd.AddCommand(gentxClaimCmd)
 	rootCmd.AddCommand(joinCmd)
 	rootCmd.AddCommand(startCmd)
+	rootCmd.AddCommand(statusCmd)
 	rootCmd.AddCommand(versionCmd)
 }
 
