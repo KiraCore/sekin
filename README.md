@@ -42,8 +42,7 @@ Sekin orchestrates multiple microservices in a containerized environment:
 
 **Sekai with Scaller**
 - KIRA blockchain node built on Cosmos SDK
-- Includes scaller CLI for node bootstrapping and management
-- Scaller provides commands: `join`, `start`, `version`, `wait`
+- Includes scaller CLI for node bootstrapping, management, and monitoring
 - Ports: 26657 (RPC), 26656 (P2P), 9090 (gRPC), 1317 (REST API)
 - Built from `sekai.Dockerfile` (contains sekaid + scaller)
 
@@ -274,6 +273,76 @@ All images are signed using Cosign for supply chain security. Verify signatures:
 cosign verify --key cosign.pub ghcr.io/kiracore/sekin/sekai:latest
 ```
 
+## Scaller CLI
+
+Scaller is a Go CLI tool bundled in the sekai container for node bootstrapping, management, and monitoring.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `wait` | Wait indefinitely (container entrypoint) |
+| `init` | Initialize new sekaid node |
+| `keys-add` | Add key to keyring |
+| `add-genesis-account` | Add account to genesis |
+| `gentx-claim` | Claim validator role in genesis |
+| `join` | Initialize node and join existing network |
+| `start` | Start sekaid (with optional restart) |
+| `status` | Show node and network status |
+| `version` | Show scaller version |
+
+### Usage Examples
+
+```bash
+# Initialize a new node
+docker exec sekin-sekai-1 /scaller init --chain-id testnet-1 --moniker MyNode
+
+# Join an existing network
+docker exec sekin-sekai-1 /scaller join \
+  --chain-id kira-1 \
+  --rpc "https://rpc.kira.network:26657" \
+  --moniker MyNode
+
+# Start sekaid (replaces process)
+docker exec sekin-sekai-1 /scaller start
+
+# Start with auto-restart (up to 5 retries)
+docker exec sekin-sekai-1 /scaller start --restart 5
+
+# Start with auto-restart (max 10 retries)
+docker exec sekin-sekai-1 /scaller start --restart always
+
+# Check node status (defaults: rpc=localhost:26657, interx=proxy.local:8080)
+docker exec sekin-sekai-1 /scaller status
+```
+
+### Status Output
+
+The `status` command displays a table showing:
+
+| Field | Description |
+|-------|-------------|
+| Sekai | Node health (OK/SYNCING/DOWN) and block height |
+| Interx | Interx service health |
+| Peers | Number of connected peers |
+| Node ID | Unique node identifier (for peer connections) |
+| Chain | Network chain ID |
+| Moniker | Node's moniker name |
+| Validator | Validator status and voting power |
+
+Example output:
+```
+SERVICE     STATUS   DETAIL
+----------  -------  ------------------------------
+Sekai       [+] OK     height 12345
+Interx      [+] OK     responding
+Peers       [+] OK     5 connected
+Node ID     [ ] INFO   a1b2c3d4e5f6...
+Chain       [ ] INFO   kira-1
+Moniker     [ ] INFO   MyNode
+Validator   [+] OK     power 100
+```
+
 ## Monitoring and Maintenance
 
 ### View Service Status
@@ -282,8 +351,11 @@ cosign verify --key cosign.pub ghcr.io/kiracore/sekin/sekai:latest
 # Check blockchain status via RPC
 curl http://localhost:26657/status
 
+# Check node status with scaller
+docker exec sekin-sekai-1 /scaller status
+
 # Check scaller version
-docker compose exec sekai scaller version
+docker exec sekin-sekai-1 /scaller version
 ```
 
 ### Access Logs
